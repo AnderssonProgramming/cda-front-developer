@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍲 Cocina para Uno - Recetario Dinámico</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background: white;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #e74c3c;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #27ae60;
+            margin-top: 25px;
+        }
+        h4 {
+            color: #8e44ad;
+            margin-top: 20px;
+        }
+        .project-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .use-case {
+            background: #f1f3f4;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .tech-section {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .code-block {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .architecture {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .timeline {
+            background: #fff5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .footer {
+            border-top: 2px solid #e74c3c;
+            margin-top: 40px;
+            padding-top: 20px;
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        @media print {
+            body { margin: 0; padding: 15px; }
+            .header { page-break-after: avoid; }
+            h2 { page-break-after: avoid; }
+            .use-case, .tech-section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍲 Cocina para Uno - Recetario Dinámico</h1>
+        <div class="project-info">
+            <strong>Proyecto del Curso CDA Front-End Developer</strong><br>
+            <em>Semana 05: Descripción web app (07 Jul - 12 Jul)</em>
+        </div>
+    </div>
+
+    <h2>📖 Descripción del Proyecto</h2>
+    <div class="highlight">
+        <p><strong>Cocina para Uno</strong> es una maqueta de sistema web diseñado como un recetario dinámico para personas que cocinan por sí mismas y buscan organizar sus recetas favoritas de manera práctica y eficiente.</p>
+        
+        <p>La aplicación permite a los usuarios buscar, crear, editar y gestionar recetas con ingredientes, pasos detallados, tiempos de cocción y sistema de favoritos. Está pensada como una solución liviana, intuitiva y sin necesidad de backend, utilizando tecnologías web modernas para crear una experiencia fluida y responsive.</p>
+    </div>
+
+    <h2>🎯 Objetivo</h2>
+    <p>Desarrollar una maqueta funcional que demuestre la aplicación práctica de las cinco tecnologías del curso:</p>
+    <ol>
+        <li><strong>HTML</strong> - Estructura semántica y formularios</li>
+        <li><strong>CSS</strong> - Diseño responsive y layout moderno</li>
+        <li><strong>JavaScript</strong> - Interactividad y manipulación del DOM</li>
+        <li><strong>JS Objects</strong> - Modelado de datos estructurados</li>
+        <li><strong>JS Patterns</strong> - Implementación de patrones de diseño</li>
+    </ol>
+
+    <h2>💼 Casos de Uso</h2>
+
+    <h3>Casos de Uso Principales (Mínimos Requeridos)</h3>
+
+    <div class="use-case">
+        <h4>1. Buscar una receta</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> El usuario puede buscar recetas existentes mediante palabras clave</li>
+            <li><strong>Flujo:</strong>
+                <ul>
+                    <li>El usuario escribe en la barra de búsqueda</li>
+                    <li>El sistema filtra las recetas en tiempo real</li>
+                    <li>Se muestran resultados por título o ingredientes</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>2. Agregar una nueva receta</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> El usuario puede crear y guardar nuevas recetas personalizadas</li>
+            <li><strong>Flujo:</strong>
+                <ul>
+                    <li>El usuario completa un formulario con datos de la receta</li>
+                    <li>El sistema valida la información ingresada</li>
+                    <li>La nueva receta se guarda y aparece en la galería</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>3. Guardar recetas como favoritas</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> El usuario puede marcar y filtrar sus recetas preferidas</li>
+            <li><strong>Flujo:</strong>
+                <ul>
+                    <li>El usuario hace clic en el ícono de corazón</li>
+                    <li>La receta se marca como favorita</li>
+                    <li>Puede filtrar para ver solo las favoritas</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <h3>Casos de Uso Adicionales (Funcionalidades Extendidas)</h3>
+
+    <div class="use-case">
+        <h4>4. Ver detalle de una receta</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> Visualizar información completa de una receta específica</li>
+            <li><strong>Flujo:</strong> Modal o vista expandida con ingredientes, pasos y tiempo completo</li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>5. Editar una receta existente</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> Modificar recetas previamente creadas</li>
+            <li><strong>Flujo:</strong> Formulario precargado con datos existentes para edición</li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>6. Eliminar una receta</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> Remover recetas no deseadas del sistema</li>
+            <li><strong>Flujo:</strong> Confirmación de eliminación y remoción permanente</li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>7. Filtrar por categorías</h4>
+        <ul>
+            <li><strong>Actor:</strong> Usuario</li>
+            <li><strong>Descripción:</strong> Organizar recetas por tipo (Vegetarianas, Postres, Rápidas, etc.)</li>
+            <li><strong>Flujo:</strong> Sistema de etiquetas y filtros múltiples</li>
+        </ul>
+    </div>
+
+    <div class="use-case">
+        <h4>8. Persistencia de datos</h4>
+        <ul>
+            <li><strong>Actor:</strong> Sistema</li>
+            <li><strong>Descripción:</strong> Mantener recetas guardadas entre sesiones</li>
+            <li><strong>Flujo:</strong> Almacenamiento automático en localStorage del navegador</li>
+        </ul>
+    </div>
+
+    <h2>🛠️ Aplicación de Tecnologías</h2>
+
+    <div class="tech-section">
+        <h3>HTML</h3>
+        <ul>
+            <li>Estructura semántica con &lt;header&gt;, &lt;main&gt;, &lt;section&gt;</li>
+            <li>Formularios para creación/edición de recetas</li>
+            <li>Cards de recetas con información organizada</li>
+            <li>Modal/dialog para vista detallada</li>
+        </ul>
+    </div>
+
+    <div class="tech-section">
+        <h3>CSS</h3>
+        <ul>
+            <li><strong>Grid Layout</strong> para galería de recetas estilo Pinterest</li>
+            <li><strong>Responsive Design</strong> con media queries para móvil/tablet/desktop</li>
+            <li>Efectos hover y transiciones suaves</li>
+            <li>Sistema de colores y tipografía coherente</li>
+            <li>Modo claro/oscuro (opcional)</li>
+        </ul>
+    </div>
+
+    <div class="tech-section">
+        <h3>JavaScript</h3>
+        <ul>
+            <li><strong>Filtrado en tiempo real</strong> de recetas</li>
+            <li><strong>Manipulación del DOM</strong> para crear/editar/eliminar elementos</li>
+            <li><strong>Event listeners</strong> para interacciones del usuario</li>
+            <li><strong>LocalStorage</strong> para persistencia de datos</li>
+            <li>Validación de formularios</li>
+        </ul>
+    </div>
+
+    <div class="tech-section">
+        <h3>JS Objects</h3>
+        <p><strong>Estructura de datos</strong> para cada receta:</p>
+        <div class="code-block">
+const receta = {
+  id: timestamp,
+  nombre: "Arepas con Queso",
+  ingredientes: ["Harina de maíz", "Queso", "Agua", "Sal"],
+  pasos: ["Mezclar ingredientes", "Formar arepas", "Asar"],
+  tiempo: 20,
+  categoria: ["Vegetariana", "Cena"],
+  favorita: false,
+  imagen: base64String
+}
+        </div>
+    </div>
+
+    <div class="tech-section">
+        <h3>JS Patterns</h3>
+        <ul>
+            <li><strong>Constructor Pattern</strong> para crear instancias de recetas</li>
+            <li><strong>Singleton Pattern</strong> para gestor central de recetas</li>
+            <li><strong>Module Pattern</strong> para organización del código</li>
+        </ul>
+    </div>
+
+    <h2>🏗️ Arquitectura del Sistema</h2>
+
+    <div class="architecture">
+        <h3>Estructura de Archivos</h3>
+        <div class="code-block">
+cda-front-developer/
+├── index.html              # Página principal
+├── css/
+│   └── styles.css          # Estilos principales
+├── js/
+│   ├── main.js            # Lógica principal y eventos
+│   ├── objects.js         # Definición de objetos Receta
+│   └── patterns.js        # Implementación de patrones
+├── assets/
+│   ├── img/              # Imágenes del proyecto
+│   └── fonts/            # Fuentes personalizadas
+└── docs/
+    ├── casos-uso.md      # Documentación de casos de uso
+    └── retrospective.md  # Análisis de tecnologías aplicadas
+        </div>
+    </div>
+
+    <div class="architecture">
+        <h3>Modelo de Conceptos</h3>
+        <div class="code-block">
+[Usuario] ──── interactúa con ────► [Interfaz Web]
+                                        │
+                                        ▼
+                               [Gestor de Recetas]
+                                        │
+                                        ▼
+                              [Receta] ◄──► [LocalStorage]
+                                 │
+                        ┌────────┼────────┐
+                        ▼        ▼        ▼
+                  [Nombre]  [Ingredientes]  [Pasos]
+                            [Tiempo]       [Categoría]
+                            [Favorita]     [Imagen]
+        </div>
+    </div>
+
+    <h2>📱 Diseño de Interfaz (Concepto)</h2>
+
+    <h3>Vista Principal</h3>
+    <ul>
+        <li><strong>Header:</strong> Título de la app + barra de búsqueda</li>
+        <li><strong>Barra de acciones:</strong> Botón "Nueva receta" + filtros</li>
+        <li><strong>Galería:</strong> Grid responsive de tarjetas de recetas</li>
+        <li><strong>Footer:</strong> Información adicional y estadísticas</li>
+    </ul>
+
+    <h3>Tarjeta de Receta</h3>
+    <ul>
+        <li>Imagen representativa</li>
+        <li>Título de la receta</li>
+        <li>Tiempo de preparación</li>
+        <li>Íconos de categoría</li>
+        <li>Botón de favorito</li>
+        <li>Acciones (ver, editar, eliminar)</li>
+    </ul>
+
+    <h3>Modal de Detalle</h3>
+    <ul>
+        <li>Imagen grande de la receta</li>
+        <li>Lista de ingredientes</li>
+        <li>Pasos numerados de preparación</li>
+        <li>Información de tiempo y categorías</li>
+        <li>Botones de acción</li>
+    </ul>
+
+    <h2>🔄 Funcionalidades Avanzadas (Opcional)</h2>
+    <ul>
+        <li><strong>Temporizador de cocción</strong> integrado</li>
+        <li><strong>Exportación a PDF</strong> para impresión</li>
+        <li><strong>Subida de imágenes</strong> personalizadas</li>
+        <li><strong>Sistema de puntuación</strong> y comentarios</li>
+        <li><strong>Modo offline</strong> con Service Workers</li>
+        <li><strong>Animaciones</strong> y transiciones avanzadas</li>
+    </ul>
+
+    <h2>📅 Cronograma de Desarrollo</h2>
+    <div class="timeline">
+        <ul>
+            <li><strong>S05</strong> (07-12 Jul): ✅ Descripción web app</li>
+            <li><strong>S06</strong> (14-19 Jul): Boceto web app</li>
+            <li><strong>S07</strong> (21-26 Jul): Diseño e implementación</li>
+            <li><strong>S08</strong> (28 Jul-01 Ago): Revisión y dudas</li>
+            <li><strong>S09</strong> (04-09 Ago): Entrega final</li>
+        </ul>
+    </div>
+
+    <h2>🎓 Productos de Entrega</h2>
+    <ol>
+        <li><strong>Código fuente</strong> completo y documentado</li>
+        <li><strong>Casos de uso</strong> detallados y modelo de conceptos</li>
+        <li><strong>Bocetos de interfaz</strong> y diseño visual</li>
+        <li><strong>Retrospectiva técnica</strong> con análisis de cada tecnología aplicada</li>
+        <li><strong>Presentación</strong> para revisión</li>
+    </ol>
+
+    <div class="footer">
+        <hr>
+        <p><em>Proyecto desarrollado como parte del curso CDA Front-End Developer</em><br>
+        <em>Universidad: Escuela Colombiana de Ingeniería Julio Garavito</em><br>
+        <em>Periodo: Julio-Agosto 2025</em></p>
+    </div>
+</body>
+</html>
