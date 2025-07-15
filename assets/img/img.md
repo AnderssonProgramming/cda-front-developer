@@ -1,1 +1,0 @@
-# Here you can add images (logos, icons, themes, etc). 
