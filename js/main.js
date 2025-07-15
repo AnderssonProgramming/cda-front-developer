@@ -3,6 +3,7 @@
  * Main JavaScript file that orchestrates the application
  * Author: CDA Front Developer
  * Date: 2024
+ * Version: 2.0.0 - Enhanced with PWA capabilities
  */
 
 // Import dependencies from other modules
@@ -10,22 +11,394 @@ import { Recipe, RecipeCollection } from './objects.js';
 import { ObserverPattern, SingletonPattern, FactoryPattern } from './patterns.js';
 
 /**
- * Application Configuration
+ * Application Configuration - Enhanced
  */
 const APP_CONFIG = {
-  version: '1.0.0',
+  version: '2.0.0',
   name: 'Cocina para Uno',
   author: 'CDA Front Developer',
   storageKey: 'cocina-para-uno-recipes',
   searchDelay: 300,
   toastDuration: 3000,
-  imageFormats: ['jpg', 'jpeg', 'png', 'webp', 'svg'],
+  imageFormats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
   maxImageSize: 5 * 1024 * 1024, // 5MB
   animations: {
     duration: 200,
     easing: 'ease-out'
+  },
+  pwa: {
+    enabled: true,
+    updateCheckInterval: 60000, // 1 minute
+    cacheVersion: 'v2.0.0'
+  },
+  performance: {
+    enableVirtualScrolling: true,
+    lazyLoadImages: true,
+    debounceSearch: true,
+    preloadCritical: true
+  },
+  features: {
+    webShare: 'shareAPI' in navigator,
+    notifications: 'Notification' in window,
+    geolocation: 'geolocation' in navigator,
+    storage: 'localStorage' in window,
+    webWorkers: 'Worker' in window,
+    intersectionObserver: 'IntersectionObserver' in window
   }
 };
+
+/**
+ * Enhanced Performance Utilities
+ */
+class PerformanceManager {
+  static debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  static throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
+
+  static async loadImageOptimized(src, placeholder = null) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      if (placeholder) {
+        img.src = placeholder;
+      }
+      
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+      
+      // Use Intersection Observer for lazy loading
+      if (APP_CONFIG.features.intersectionObserver) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              img.src = src;
+              observer.disconnect();
+            }
+          });
+        });
+        
+        // Start observing when image element is added to DOM
+        if (img.parentElement) {
+          observer.observe(img);
+        } else {
+          img.src = src; // Fallback
+        }
+      } else {
+        img.src = src;
+      }
+    });
+  }
+
+  static measurePerformance(name, fn) {
+    if (typeof performance !== 'undefined' && performance.mark) {
+      performance.mark(`${name}-start`);
+      const result = fn();
+      performance.mark(`${name}-end`);
+      performance.measure(name, `${name}-start`, `${name}-end`);
+      return result;
+    }
+    return fn();
+  }
+}
+
+/**
+ * PWA Manager for Service Worker and App Install
+ */
+class PWAManager extends SingletonPattern {
+  initialize() {
+    this.deferredPrompt = null;
+    this.isInstalled = false;
+    this.updateAvailable = false;
+    
+    this.registerServiceWorker();
+    this.setupInstallPrompt();
+    this.setupUpdatePrompt();
+    this.addPWAEventListeners();
+  }
+
+  async registerServiceWorker() {
+    if (!('serviceWorker' in navigator) || !APP_CONFIG.pwa.enabled) {
+      console.info('🔧 Service Worker not supported or disabled');
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            this.updateAvailable = true;
+            this.showUpdateNotification();
+          }
+        });
+      });
+
+      console.info('🎉 Service Worker registered successfully');
+    } catch (error) {
+      console.error('❌ Service Worker registration failed:', error);
+    }
+  }
+
+  setupInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      this.showInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.isInstalled = true;
+      this.hideInstallButton();
+      this.showToast('¡App instalada exitosamente! 🎉', 'success');
+    });
+  }
+
+  setupUpdatePrompt() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+          this.showUpdateNotification();
+        }
+      });
+    }
+  }
+
+  addPWAEventListeners() {
+    // Add install button if not already present
+    this.createInstallButton();
+    
+    // Listen for offline/online events
+    window.addEventListener('online', () => {
+      this.showToast('🌐 Conexión restaurada', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+      this.showToast('📱 Modo sin conexión activado', 'info');
+    });
+  }
+
+  createInstallButton() {
+    if (document.getElementById('pwa-install-btn')) return;
+
+    const installBtn = document.createElement('button');
+    installBtn.id = 'pwa-install-btn';
+    installBtn.className = 'btn btn--secondary btn--icon pwa-install-btn';
+    installBtn.innerHTML = `
+      <span class="btn__icon" aria-hidden="true">📱</span>
+      <span class="btn__text">Instalar App</span>
+    `;
+    installBtn.style.display = 'none';
+    installBtn.setAttribute('aria-label', 'Instalar aplicación');
+    
+    installBtn.addEventListener('click', () => this.installApp());
+    
+    // Add to header actions
+    const headerActions = document.querySelector('.header__actions');
+    if (headerActions) {
+      headerActions.appendChild(installBtn);
+    }
+  }
+
+  showInstallButton() {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn && !this.isInstalled) {
+      installBtn.style.display = 'flex';
+    }
+  }
+
+  hideInstallButton() {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.style.display = 'none';
+    }
+  }
+
+  async installApp() {
+    if (!this.deferredPrompt) return;
+
+    try {
+      this.deferredPrompt.prompt();
+      const { outcome } = await this.deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.info('🎉 PWA installation accepted');
+      } else {
+        console.info('📱 PWA installation declined');
+      }
+      
+      this.deferredPrompt = null;
+      this.hideInstallButton();
+    } catch (error) {
+      console.error('❌ PWA installation failed:', error);
+    }
+  }
+
+  showUpdateNotification() {
+    const updateToast = document.createElement('div');
+    updateToast.className = 'toast toast--info';
+    updateToast.innerHTML = `
+      <div class="toast__content">
+        <div class="toast__message">
+          <strong>🔄 Actualización disponible</strong>
+          <p>Hay una nueva versión de la app disponible</p>
+        </div>
+        <div class="toast__actions">
+          <button class="btn btn--sm btn--primary" onclick="location.reload()">
+            Actualizar ahora
+          </button>
+          <button class="btn btn--sm btn--ghost" onclick="this.closest('.toast').remove()">
+            Más tarde
+          </button>
+        </div>
+      </div>
+    `;
+    
+    const toastContainer = document.getElementById('toast-container');
+    if (toastContainer) {
+      toastContainer.appendChild(updateToast);
+    }
+  }
+
+  showToast(message, type = 'info') {
+    const toast = ToastFactory.create(type, message);
+    const toastContainer = document.getElementById('toast-container');
+    if (toastContainer) {
+      toastContainer.appendChild(toast);
+      
+      // Auto remove after duration
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, APP_CONFIG.toastDuration);
+    }
+  }
+}
+
+/**
+ * Enhanced Recipe Sharing with Web Share API
+ */
+class RecipeSharer {
+  static async shareRecipe(recipe) {
+    const shareData = {
+      title: `🍲 ${recipe.title} - Cocina para Uno`,
+      text: `Descubre esta deliciosa receta: ${recipe.title}. Tiempo de preparación: ${recipe.cookingTime} minutos.`,
+      url: window.location.href
+    };
+
+    try {
+      if (APP_CONFIG.features.webShare && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        console.info('✅ Recipe shared successfully');
+        return true;
+      } else {
+        // Fallback to clipboard
+        await this.copyToClipboard(shareData);
+        return true;
+      }
+    } catch (error) {
+      console.error('❌ Share failed:', error);
+      return false;
+    }
+  }
+
+  static async copyToClipboard(shareData) {
+    const textToShare = `${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`;
+    
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(textToShare);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = textToShare;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
+      // Show success toast
+      PWAManager.getInstance().showToast('📋 Enlace copiado al portapapeles', 'success');
+    } catch (error) {
+      console.error('❌ Clipboard copy failed:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Enhanced Toast Factory with more types and animations
+ */
+class ToastFactory extends FactoryPattern {
+  static create(type, message, options = {}) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'polite');
+    
+    const icons = {
+      success: '✅',
+      error: '❌', 
+      warning: '⚠️',
+      info: 'ℹ️',
+      loading: '⏳'
+    };
+
+    toast.innerHTML = `
+      <div class="toast__content">
+        <span class="toast__icon" aria-hidden="true">${icons[type] || 'ℹ️'}</span>
+        <span class="toast__message">${message}</span>
+        ${options.dismissible !== false ? `
+          <button class="toast__close" aria-label="Cerrar notificación">
+            <span aria-hidden="true">✕</span>
+          </button>
+        ` : ''}
+      </div>
+    `;
+
+    // Add close functionality
+    if (options.dismissible !== false) {
+      const closeBtn = toast.querySelector('.toast__close');
+      closeBtn?.addEventListener('click', () => {
+        toast.classList.add('toast--removing');
+        setTimeout(() => toast.remove(), 200);
+      });
+    }
+
+    // Add entrance animation
+    requestAnimationFrame(() => {
+      toast.classList.add('toast--show');
+    });
+
+    return toast;
+  }
+}
+
+// Continue with the original DOM elements cache and state management...
 
 /**
  * DOM Elements Cache

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Página sin conexión - Cocina para Uno">
+    <meta name="theme-color" content="#FF6B35">
+    
+    <title>Sin conexión - Cocina para Uno</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #E85A2E 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .offline-container {
+            max-width: 400px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .offline-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        .offline-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .offline-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: white;
+            color: #FF6B35;
+            transform: translateY(-2px);
+        }
+        
+        .btn--primary {
+            background: white;
+            color: #FF6B35;
+        }
+        
+        .btn--primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .offline-tips {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: left;
+        }
+        
+        .offline-tips h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .offline-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .offline-tips li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .offline-tips li::before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .offline-title {
+                font-size: 1.5rem;
+            }
+            
+            .offline-message {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon" role="img" aria-label="Sin conexión">
+            🍲📱
+        </div>
+        
+        <h1 class="offline-title">
+            ¡Sin conexión!
+        </h1>
+        
+        <p class="offline-message">
+            No hay conexión a internet en este momento, pero puedes seguir usando las recetas que ya tienes guardadas.
+        </p>
+        
+        <div class="offline-actions">
+            <button class="btn btn--primary" onclick="window.location.reload()">
+                🔄 Intentar de nuevo
+            </button>
+            
+            <a href="/" class="btn">
+                🏠 Ir al inicio
+            </a>
+        </div>
+        
+        <div class="offline-tips">
+            <h3>💡 Consejos sin conexión:</h3>
+            <ul>
+                <li>Tus recetas favoritas siguen disponibles</li>
+                <li>Puedes crear nuevas recetas que se sincronizarán cuando vuelvas a conectarte</li>
+                <li>Todas las búsquedas y filtros funcionan normalmente</li>
+                <li>Los cambios se guardarán automáticamente cuando recuperes la conexión</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Auto-retry connection every 30 seconds
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            } else if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(checkConnection, 30000);
+            }
+        }
+        
+        // Start checking connection
+        setTimeout(checkConnection, 5000);
+        
+        // Listen for online event
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+        
+        // Keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (e.target.tagName === 'BUTTON') {
+                    e.target.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
