@@ -24,6 +24,9 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
     
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23FF6B35' rx='40'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='120' fill='white'>🍲</text></svg>">
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     
@@ -107,7 +110,8 @@
             </div>
             
             <!-- Filters -->
-            <div class="filters" role="group" aria-label="Filtros de recetas">
+            <fieldset class="filters" aria-label="Filtros de recetas">
+                <legend class="visually-hidden">Seleccionar filtros de recetas</legend>
                 <button 
                     type="button" 
                     class="filter-btn filter-btn--active" 
@@ -144,14 +148,13 @@
                     <ul 
                         class="dropdown__menu" 
                         id="categories-menu"
-                        role="menu"
                         aria-label="Filtrar por categorías"
                         hidden
                     >
                         <!-- Categories will be populated dynamically -->
                     </ul>
                 </div>
-            </div>
+            </fieldset>
         </div>
     </nav>
     
@@ -213,17 +216,17 @@
     </main>
     
     <!-- Recipe Modal -->
-    <div class="modal" id="recipe-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <dialog class="modal" id="recipe-modal" aria-labelledby="modal-title">
         <div class="modal__backdrop" aria-hidden="true"></div>
         <div class="modal__container">
             <div class="modal__content">
                 <!-- Modal content will be populated dynamically -->
             </div>
         </div>
-    </div>
+    </dialog>
     
     <!-- Recipe Form Modal -->
-    <div class="modal" id="recipe-form-modal" role="dialog" aria-modal="true" aria-labelledby="form-modal-title" hidden>
+    <dialog class="modal" id="recipe-form-modal" aria-labelledby="form-modal-title">
         <div class="modal__backdrop" aria-hidden="true"></div>
         <div class="modal__container modal__container--large">
             <div class="modal__content">
