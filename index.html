@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cocina para Uno - Recetario dinámico para personas que cocinan por sí mismas">
+    <meta name="keywords" content="recetas, cocina, recetario, favoritos, ingredientes">
+    <meta name="author" content="CDA Front-End Developer">
+    <meta name="theme-color" content="#FF6B35">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Cocina para Uno - Recetario Dinámico">
+    <meta property="og:description" content="Tu recetario personal para crear, organizar y encontrar tus recetas favoritas">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./assets/img/oneCooking-Mockup.png">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/styles.css">
+    
+    <title>🍲 Cocina para Uno | Recetario Dinámico</title>
+</head>
+<body>
+    <!-- Skip Navigation for Accessibility -->
+    <a href="#main-content" class="skip-nav">Ir al contenido principal</a>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen" aria-hidden="true">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Preparando tu cocina...</p>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="header" role="banner">
+        <div class="header__container">
+            <div class="header__brand">
+                <h1 class="header__title">
+                    <span class="header__icon" aria-hidden="true">🍲</span>
+                    <span class="header__text">Cocina para Uno</span>
+                </h1>
+                <p class="header__subtitle">Tu recetario personal</p>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search" role="search">
+                <div class="search__container">
+                    <label for="search-input" class="search__label visually-hidden">
+                        Buscar recetas por nombre o ingrediente
+                    </label>
+                    <input 
+                        type="search"
+                        id="search-input"
+                        class="search__input"
+                        placeholder="Buscar recetas o ingredientes..."
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-describedby="search-results-count"
+                    >
+                    <button type="button" class="search__clear" aria-label="Limpiar búsqueda" hidden>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div id="search-results-count" class="search__results-count" aria-live="polite"></div>
+            </div>
+            
+            <!-- Theme Toggle -->
+            <button 
+                type="button" 
+                class="theme-toggle" 
+                aria-label="Cambiar a modo oscuro"
+                aria-pressed="false"
+                title="Cambiar tema"
+            >
+                <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Main Navigation -->
+    <nav class="nav" role="navigation" aria-label="Navegación principal">
+        <div class="nav__container">
+            <!-- Action Buttons -->
+            <div class="nav__actions">
+                <button 
+                    type="button" 
+                    class="btn btn--primary btn--add-recipe"
+                    aria-label="Agregar nueva receta"
+                    title="Nueva receta"
+                >
+                    <span class="btn__icon" aria-hidden="true">+</span>
+                    <span class="btn__text">Nueva Receta</span>
+                </button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters" role="group" aria-label="Filtros de recetas">
+                <button 
+                    type="button" 
+                    class="filter-btn filter-btn--active" 
+                    data-filter="all"
+                    aria-pressed="true"
+                >
+                    <span class="filter-btn__text">Todas</span>
+                    <span class="filter-btn__count" data-count="all">0</span>
+                </button>
+                
+                <button 
+                    type="button" 
+                    class="filter-btn" 
+                    data-filter="favorites"
+                    aria-pressed="false"
+                >
+                    <span class="filter-btn__icon" aria-hidden="true">❤️</span>
+                    <span class="filter-btn__text">Favoritas</span>
+                    <span class="filter-btn__count" data-count="favorites">0</span>
+                </button>
+                
+                <div class="dropdown">
+                    <button 
+                        type="button" 
+                        class="filter-btn dropdown__trigger"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        aria-controls="categories-menu"
+                    >
+                        <span class="filter-btn__text">Categorías</span>
+                        <span class="filter-btn__arrow" aria-hidden="true">▼</span>
+                    </button>
+                    
+                    <ul 
+                        class="dropdown__menu" 
+                        id="categories-menu"
+                        role="menu"
+                        aria-label="Filtrar por categorías"
+                        hidden
+                    >
+                        <!-- Categories will be populated dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main id="main-content" class="main" role="main">
+        <!-- Statistics Bar -->
+        <section class="stats" aria-label="Estadísticas de recetas">
+            <div class="stats__container">
+                <div class="stat-item">
+                    <span class="stat-item__value" data-stat="total">0</span>
+                    <span class="stat-item__label">Recetas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-item__value" data-stat="favorites">0</span>
+                    <span class="stat-item__label">Favoritas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-item__value" data-stat="categories">0</span>
+                    <span class="stat-item__label">Categorías</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Recipes Grid -->
+        <section class="recipes-section" aria-label="Galería de recetas">
+            <div class="recipes-grid" id="recipes-grid" role="grid" aria-label="Lista de recetas">
+                <!-- Recipe cards will be populated dynamically -->
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="empty-state" hidden>
+                <div class="empty-state__content">
+                    <div class="empty-state__icon" aria-hidden="true">🍽️</div>
+                    <h2 class="empty-state__title">¡Comienza tu aventura culinaria!</h2>
+                    <p class="empty-state__description">
+                        Agrega tu primera receta y construye tu colección personal de sabores favoritos.
+                    </p>
+                    <button type="button" class="btn btn--primary btn--add-first-recipe">
+                        <span class="btn__icon" aria-hidden="true">+</span>
+                        <span class="btn__text">Agregar Mi Primera Receta</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- No Results State -->
+            <div class="no-results" id="no-results" hidden>
+                <div class="no-results__content">
+                    <div class="no-results__icon" aria-hidden="true">🔍</div>
+                    <h2 class="no-results__title">No se encontraron recetas</h2>
+                    <p class="no-results__description">
+                        Intenta con otros términos de búsqueda o explora nuestras categorías.
+                    </p>
+                    <button type="button" class="btn btn--secondary btn--clear-search">
+                        Limpiar búsqueda
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Recipe Modal -->
+    <div class="modal" id="recipe-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+        <div class="modal__backdrop" aria-hidden="true"></div>
+        <div class="modal__container">
+            <div class="modal__content">
+                <!-- Modal content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recipe Form Modal -->
+    <div class="modal" id="recipe-form-modal" role="dialog" aria-modal="true" aria-labelledby="form-modal-title" hidden>
+        <div class="modal__backdrop" aria-hidden="true"></div>
+        <div class="modal__container modal__container--large">
+            <div class="modal__content">
+                <header class="modal__header">
+                    <h2 id="form-modal-title" class="modal__title">Nueva Receta</h2>
+                    <button type="button" class="modal__close" aria-label="Cerrar modal">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </header>
+                
+                <form class="recipe-form" id="recipe-form" novalidate>
+                    <div class="form-section">
+                        <h3 class="form-section__title">Información Básica</h3>
+                        
+                        <div class="form-group">
+                            <label for="recipe-name" class="form-label">
+                                Nombre de la receta *
+                            </label>
+                            <input 
+                                type="text"
+                                id="recipe-name"
+                                name="name"
+                                class="form-input"
+                                required
+                                minlength="2"
+                                maxlength="100"
+                                aria-describedby="recipe-name-error"
+                                placeholder="Ej: Arepas con queso"
+                            >
+                            <div class="form-error" id="recipe-name-error" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="recipe-time" class="form-label">
+                                Tiempo de preparación (minutos) *
+                            </label>
+                            <input 
+                                type="number"
+                                id="recipe-time"
+                                name="time"
+                                class="form-input"
+                                required
+                                min="1"
+                                max="480"
+                                aria-describedby="recipe-time-error"
+                                placeholder="30"
+                            >
+                            <div class="form-error" id="recipe-time-error" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="recipe-image" class="form-label">
+                                Imagen de la receta
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input 
+                                    type="file"
+                                    id="recipe-image"
+                                    name="image"
+                                    class="file-input"
+                                    accept="image/*"
+                                    aria-describedby="recipe-image-help"
+                                >
+                                <label for="recipe-image" class="file-input-label">
+                                    <span class="file-input-icon" aria-hidden="true">📷</span>
+                                    <span class="file-input-text">Seleccionar imagen</span>
+                                </label>
+                                <div class="file-input-preview" id="image-preview" hidden></div>
+                            </div>
+                            <small id="recipe-image-help" class="form-help">
+                                Formatos soportados: JPG, PNG, WebP (máx. 5MB)
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3 class="form-section__title">Ingredientes</h3>
+                        
+                        <div class="dynamic-list" id="ingredients-list">
+                            <div class="dynamic-list__item">
+                                <label for="ingredient-0" class="visually-hidden">Ingrediente 1</label>
+                                <input 
+                                    type="text"
+                                    id="ingredient-0"
+                                    name="ingredients[]"
+                                    class="form-input dynamic-list__input"
+                                    placeholder="Ej: 2 tazas de harina"
+                                    required
+                                >
+                                <button 
+                                    type="button" 
+                                    class="btn btn--icon btn--remove-item"
+                                    aria-label="Eliminar ingrediente"
+                                    disabled
+                                >
+                                    <span aria-hidden="true">−</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button 
+                            type="button" 
+                            class="btn btn--secondary btn--add-ingredient"
+                            aria-label="Agregar otro ingrediente"
+                        >
+                            <span class="btn__icon" aria-hidden="true">+</span>
+                            <span class="btn__text">Agregar Ingrediente</span>
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3 class="form-section__title">Pasos de Preparación</h3>
+                        
+                        <div class="dynamic-list" id="steps-list">
+                            <div class="dynamic-list__item">
+                                <label for="step-0" class="dynamic-list__label">Paso 1</label>
+                                <textarea 
+                                    id="step-0"
+                                    name="steps[]"
+                                    class="form-textarea dynamic-list__textarea"
+                                    rows="3"
+                                    placeholder="Describe este paso de la preparación..."
+                                    required
+                                ></textarea>
+                                <button 
+                                    type="button" 
+                                    class="btn btn--icon btn--remove-item"
+                                    aria-label="Eliminar paso"
+                                    disabled
+                                >
+                                    <span aria-hidden="true">−</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button 
+                            type="button" 
+                            class="btn btn--secondary btn--add-step"
+                            aria-label="Agregar otro paso"
+                        >
+                            <span class="btn__icon" aria-hidden="true">+</span>
+                            <span class="btn__text">Agregar Paso</span>
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3 class="form-section__title">Categorías</h3>
+                        
+                        <div class="categories-input">
+                            <input 
+                                type="text"
+                                id="category-input"
+                                class="form-input"
+                                placeholder="Agregar categoría (presiona Enter)"
+                                aria-describedby="categories-help"
+                            >
+                            <div class="categories-tags" id="categories-tags" aria-live="polite"></div>
+                        </div>
+                        <small id="categories-help" class="form-help">
+                            Ejemplos: Vegetariana, Postre, Rápida, Saludable
+                        </small>
+                    </div>
+                    
+                    <footer class="modal__footer">
+                        <button type="button" class="btn btn--secondary btn--cancel">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn--primary btn--save">
+                            <span class="btn__text">Guardar Receta</span>
+                        </button>
+                    </footer>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+    
+    <!-- Scripts -->
+    <script src="./js/patterns.js"></script>
+    <script src="./js/objects.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
