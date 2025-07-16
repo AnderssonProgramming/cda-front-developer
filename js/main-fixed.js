@@ -350,62 +350,29 @@ class ImageService {
 
   static async searchImage(query, type = 'recipe', size = '400x300') {
     try {
-      console.log(`🔍 Searching image for: "${query}" (type: ${type})`);
-      
       // Check cache first
       const cacheKey = `${query}-${type}-${size}`;
       if (this.imageCache.has(cacheKey)) {
-        const cachedUrl = this.imageCache.get(cacheKey);
-        console.log(`✅ Found cached image for "${query}"`);
-        return cachedUrl;
+        return this.imageCache.get(cacheKey);
       }
 
-      // Show searching toast
-      showToast('info', t('searchingImage'), { autoDismiss: true });
-
-      // Generate a realistic image URL
-      const imageUrl = this.generateRealisticImageUrl(query, type, size);
+      // Simulate API call to image search service
+      // In real app, this would call Google Images API, Unsplash API, etc.
+      const imageId = this.generateImageId(query, type);
+      const imageUrl = this.buildImageUrl(imageId, size);
       
       // Cache the result
       this.imageCache.set(cacheKey, imageUrl);
       this.searchHistory.set(query, { url: imageUrl, timestamp: Date.now() });
       
       // Small delay to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log(`✅ Image found for "${query}": ${imageUrl}`);
-      showToast('success', t('imageFound'), { autoDismiss: true });
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       return imageUrl;
     } catch (error) {
-      console.error('❌ Error searching for image:', error);
-      showToast('warning', t('imageNotFound'), { autoDismiss: true });
+      console.error('Error searching for image:', error);
       return this.getDefaultImage(type);
     }
-  }
-
-  static generateRealisticImageUrl(query, type, size) {
-    // Use a combination of real food image services
-    const services = [
-      'https://images.unsplash.com',
-      'https://source.unsplash.com'
-    ];
-    
-    // Clean query for URL
-    const cleanQuery = encodeURIComponent(query.toLowerCase().trim());
-    const [width, height] = size.split('x');
-    
-    // Generate different image patterns based on query
-    const patterns = [
-      `${services[1]}/${width}x${height}/?${cleanQuery},food`,
-      `${services[1]}/${width}x${height}/?${cleanQuery},cooking`,
-      `${services[1]}/featured/${width}x${height}/?${cleanQuery},recipe`,
-      `${services[1]}/${width}x${height}/?${cleanQuery},meal,delicious`
-    ];
-    
-    // Select pattern based on query length for consistency
-    const patternIndex = query.length % patterns.length;
-    return patterns[patternIndex];
   }
 
   static generateImageId(query, type) {
@@ -434,12 +401,10 @@ class ImageService {
   }
 
   static async searchIngredientImage(ingredient) {
-    console.log(`🥕 Searching ingredient image: ${ingredient}`);
     return await this.searchImage(ingredient, 'ingredient', '200x200');
   }
 
   static async searchRecipeImage(recipeName) {
-    console.log(`🍽️ Searching recipe image: ${recipeName}`);
     return await this.searchImage(recipeName, 'recipe', '400x300');
   }
 }
@@ -722,30 +687,12 @@ class ThemeManager extends SingletonPattern {
   }
 
   applyTheme() {
-    console.log(`🎨 Applying theme: ${this.currentTheme}`);
-    
-    // Apply theme to both body AND document element for full coverage
     document.body.setAttribute('data-theme', this.currentTheme);
-    document.documentElement.setAttribute('data-theme', this.currentTheme);
-    
-    console.log(`✅ data-theme="${this.currentTheme}" applied to body and html`);
-    
-    // Also add/remove CSS classes for better compatibility
-    document.body.classList.remove('theme-light', 'theme-dark');
-    document.body.classList.add(`theme-${this.currentTheme}`);
-    
-    console.log(`✅ CSS class "theme-${this.currentTheme}" applied to body`);
-    
     this.updateThemeToggle();
-    
-    console.log(`✅ Theme applied: ${this.currentTheme}`);
   }
 
   updateThemeToggle() {
-    if (!DOM.themeToggle) {
-      console.warn('Theme toggle button not found');
-      return;
-    }
+    if (!DOM.themeToggle) return;
 
     const isDark = this.currentTheme === 'dark';
     const icon = DOM.themeToggle.querySelector('.theme-toggle__icon');
@@ -754,45 +701,22 @@ class ThemeManager extends SingletonPattern {
       icon.textContent = isDark ? '☀️' : '🌙';
     }
     
-    DOM.themeToggle.setAttribute('aria-pressed', isDark.toString());
+    DOM.themeToggle.setAttribute('aria-pressed', isDark);
     DOM.themeToggle.setAttribute('aria-label', 
       isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
     );
   }
 
   setupThemeToggle() {
-    console.log('🔧 Setting up theme toggle...');
-    console.log('DOM.themeToggle:', DOM.themeToggle);
-    
-    if (!DOM.themeToggle) {
-      console.warn('❌ Theme toggle setup failed - button not found');
-      // Try to find it again
-      DOM.themeToggle = document.querySelector('.theme-toggle');
-      console.log('🔄 Retry finding theme toggle:', DOM.themeToggle);
-      
-      if (!DOM.themeToggle) {
-        console.error('❌ Theme toggle button not found in DOM!');
-        return;
-      }
-    }
+    if (!DOM.themeToggle) return;
 
-    console.log('🔧 Setting up theme toggle...');
-    
-    DOM.themeToggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      console.log(`🖱️ Theme toggle clicked. Current: ${this.currentTheme}`);
+    DOM.themeToggle.addEventListener('click', () => {
       this.toggleTheme();
     });
-    
-    console.log('✅ Theme toggle event listener added');
   }
 
   toggleTheme() {
-    const oldTheme = this.currentTheme;
     this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-    
-    console.log(`🔄 Toggling theme: ${oldTheme} → ${this.currentTheme}`);
-    
     localStorage.setItem(APP_CONFIG.themeKey, this.currentTheme);
     this.applyTheme();
     
