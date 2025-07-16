@@ -782,13 +782,15 @@ class LanguageManager extends SingletonPattern {
       e.preventDefault();
       e.stopPropagation();
       
-      const isOpen = !DOM.languageMenu.hasAttribute('hidden');
+      const isOpen = DOM.languageMenu.classList.contains('language-selector__dropdown--open');
       
       if (isOpen) {
         DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageMenu.classList.remove('language-selector__dropdown--open');
         DOM.languageToggle.setAttribute('aria-expanded', 'false');
       } else {
         DOM.languageMenu.removeAttribute('hidden');
+        DOM.languageMenu.classList.add('language-selector__dropdown--open');
         DOM.languageToggle.setAttribute('aria-expanded', 'true');
       }
     });
@@ -806,14 +808,16 @@ class LanguageManager extends SingletonPattern {
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.language-selector')) {
         DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageMenu.classList.remove('language-selector__dropdown--open');
         DOM.languageToggle.setAttribute('aria-expanded', 'false');
       }
     });
 
     // Close on escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !DOM.languageMenu.hasAttribute('hidden')) {
+      if (e.key === 'Escape' && DOM.languageMenu.classList.contains('language-selector__dropdown--open')) {
         DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageMenu.classList.remove('language-selector__dropdown--open');
         DOM.languageToggle.setAttribute('aria-expanded', 'false');
       }
     });
@@ -1781,25 +1785,46 @@ class OneCookingApp {
         <label for="${listId}-0" class="dynamic-list__label">
           ${isIngredients ? 'Ingrediente 1' : 'Paso 1'}
         </label>
-        ${inputType === 'textarea' ? `
-          <textarea 
-            id="${listId}-0"
-            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
-            class="form-textarea dynamic-list__textarea"
-            rows="3"
-            placeholder="${placeholder}"
-            required
-          ></textarea>
-        ` : `
-          <input 
-            type="text"
-            id="${listId}-0"
-            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
-            class="form-input dynamic-list__input"
-            placeholder="${placeholder}"
-            required
-          >
-        `}
+        <div class="dynamic-list__input-group">
+          ${inputType === 'textarea' ? `
+            <textarea 
+              id="${listId}-0"
+              name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+              class="form-textarea dynamic-list__textarea"
+              rows="3"
+              placeholder="${placeholder}"
+              required
+            ></textarea>
+          ` : `
+            <input 
+              type="text"
+              id="${listId}-0"
+              name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+              class="form-input dynamic-list__input"
+              placeholder="${placeholder}"
+              required
+            >
+          `}
+          
+          ${isIngredients ? `
+            <div class="ingredient-image-input">
+              <label for="${listId}-image-0" class="ingredient-image-label">
+                📷 Imagen del ingrediente (opcional)
+              </label>
+              <input 
+                type="file"
+                id="${listId}-image-0"
+                name="ingredient_images[]"
+                class="form-input ingredient-image-file"
+                accept="image/*"
+                aria-describedby="${listId}-image-help-0"
+              >
+              <small id="${listId}-image-help-0" class="form-help">
+                JPG, PNG, WebP (máx. 2MB)
+              </small>
+            </div>
+          ` : ''}
+        </div>
         <button 
           type="button" 
           class="btn btn--icon btn--remove-item"
@@ -1863,10 +1888,17 @@ class OneCookingApp {
               id="${listId}-image-${index}"
               name="ingredient_images[]"
               class="form-input ingredient-image-file"
-              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-              data-ingredient-index="${index}"
+              accept="image/*"
+              aria-describedby="${listId}-image-help-${index}"
             >
-            <small class="form-help">O se buscará automáticamente al guardar</small>
+            <small id="${listId}-image-help-${index}" class="form-help">
+              JPG, PNG, WebP (máx. 2MB)
+            </small>
+            ${imageUrl ? `
+              <div class="ingredient-image-preview">
+                <img src="${imageUrl}" alt="Preview" class="ingredient-image-thumb">
+              </div>
+            ` : ''}
           </div>
         ` : ''}
       </div>
@@ -1890,9 +1922,78 @@ class OneCookingApp {
     });
 
     // ✅ FIJO: Auto-búsqueda de imagen para ingredientes con file upload
-    if (isIngredients && !value) {
+    if (isIngredients) {
       const input = itemDiv.querySelector('.dynamic-list__input');
       const imageFileInput = itemDiv.querySelector('.ingredient-image-file');
+      
+      if (input) {
+        let searchTimeout;
+        input.addEventListener('input', () => {
+          clearTimeout(searchTimeout);
+          const ingredient = input.value.trim();
+          
+          if (ingredient.length > 2 && imageFileInput && !imageFileInput.files.length) {
+            searchTimeout = setTimeout(async () => {
+              try {
+                showToast('info', `Buscando imagen para: ${ingredient}`);
+                const imageUrl = await ImageService.searchIngredientImage(ingredient);
+                if (imageUrl) {
+                  showToast('success', `Imagen encontrada para: ${ingredient}`);
+                  // Store the URL for potential use
+                  input.dataset.autoImageUrl = imageUrl;
+                  
+                  // Show preview option
+                  const previewContainer = itemDiv.querySelector('.ingredient-image-preview') || document.createElement('div');
+                  previewContainer.className = 'ingredient-image-preview';
+                  previewContainer.innerHTML = `
+                    <img src="${imageUrl}" alt="Preview sugerido" class="ingredient-image-thumb">
+                    <button type="button" class="btn btn--small btn--secondary use-suggested-image">
+                      Usar imagen sugerida
+                    </button>
+                  `;
+                  
+                  const imageInputContainer = itemDiv.querySelector('.ingredient-image-input');
+                  if (imageInputContainer && !itemDiv.querySelector('.ingredient-image-preview')) {
+                    imageInputContainer.appendChild(previewContainer);
+                  }
+                  
+                  // Add event listener to use suggested image
+                  const useBtn = previewContainer.querySelector('.use-suggested-image');
+                  if (useBtn) {
+                    useBtn.addEventListener('click', async () => {
+                      try {
+                        // Create blob from URL and set as file input
+                        const response = await fetch(imageUrl);
+                        const blob = await response.blob();
+                        const file = new File([blob], `${ingredient.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
+                        
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        imageFileInput.files = dataTransfer.files;
+                        
+                        showToast('success', `Imagen aplicada para: ${ingredient}`);
+                        previewContainer.remove();
+                      } catch (error) {
+                        console.error('Error applying suggested image:', error);
+                        showToast('error', 'Error al aplicar imagen sugerida');
+                      }
+                    });
+                  }
+                } else {
+                  showToast('warning', `No se encontró imagen para: ${ingredient}`);
+                }
+              } catch (error) {
+                console.error('Error searching ingredient image:', error);
+                showToast('error', `Error buscando imagen para: ${ingredient}`);
+              }
+            }, 1500);
+          }
+        });
+      }
+    }
+
+    this.updateDynamicListLabels(listId);
+  }
       
       if (input) {
         input.addEventListener('blur', async (e) => {
@@ -1948,24 +2049,6 @@ class OneCookingApp {
         removeBtn.disabled = items.length === 1;
       }
     });
-  }
-
-  async searchIngredientImage(ingredient) {
-    try {
-      showToast('loading', `${t('searchingImage')} "${ingredient}"...`);
-      
-      const imageUrl = await ImageService.searchIngredientImage(ingredient);
-      
-      if (imageUrl) {
-        showToast('success', `${t('imageFound')} "${ingredient}"`);
-      }
-      
-      return imageUrl;
-    } catch (error) {
-      console.error('Error searching ingredient image:', error);
-      showToast('warning', `${t('imageNotFound')} "${ingredient}"`);
-      return null;
-    }
   }
 
   addCategory(categoryText) {
