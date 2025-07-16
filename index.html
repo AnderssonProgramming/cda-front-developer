@@ -80,6 +80,58 @@
                 <div id="search-results-count" class="search__results-count" aria-live="polite"></div>
             </div>
             
+            <!-- Language Selector -->
+            <div class="language-selector">
+                <button 
+                    type="button" 
+                    class="language-toggle" 
+                    aria-label="Cambiar idioma"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    title="Seleccionar idioma"
+                >
+                    <span class="language-toggle__flag" aria-hidden="true">🇪🇸</span>
+                    <span class="language-toggle__text">ES</span>
+                    <span class="language-toggle__arrow" aria-hidden="true">▼</span>
+                </button>
+                
+                <ul class="language-menu" hidden>
+                    <li>
+                        <button 
+                            type="button" 
+                            class="language-option" 
+                            data-lang="es" 
+                            aria-current="true"
+                        >
+                            <span class="language-option__flag" aria-hidden="true">🇪🇸</span>
+                            <span class="language-option__text">Español</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button 
+                            type="button" 
+                            class="language-option" 
+                            data-lang="en" 
+                            aria-current="false"
+                        >
+                            <span class="language-option__flag" aria-hidden="true">🇺🇸</span>
+                            <span class="language-option__text">English</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button 
+                            type="button" 
+                            class="language-option" 
+                            data-lang="fr" 
+                            aria-current="false"
+                        >
+                            <span class="language-option__flag" aria-hidden="true">🇫🇷</span>
+                            <span class="language-option__text">Français</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
             <!-- Theme Toggle -->
             <button 
                 type="button" 

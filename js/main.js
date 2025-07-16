@@ -3,8 +3,23 @@
  * Complete functional application with PWA, multi-language and auto-image features
  * Author: CDA Front Developer
  * Date: 2025
- * Version: 3.0.0 - Enhanced with all requested features
+ * Version: 4.0.0 - Fixed and Enhanced
  */
+
+/**
+ * Global Configuration
+ */
+const APP_CONFIG = {
+  version: '4.0.0',
+  name: 'Cocina para Uno',
+  themeKey: 'oneCooking-theme',
+  languageKey: 'oneCooking-language',
+  recipesKey: 'oneCooking-recipes',
+  favoritesKey: 'oneCooking-favorites',
+  imageFormats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+  maxFileSize: 5 * 1024 * 1024, // 5MB
+  autoSaveDelay: 1000
+};
 
 /**
  * Multi-language support - Translations
@@ -59,7 +74,10 @@ const TRANSLATIONS = {
     recipeDeleted: 'eliminada correctamente',
     language: 'Idioma',
     changeLanguage: 'Cambiar idioma',
-    changed: 'cambiado'
+    changed: 'cambiado',
+    searchingImage: 'Buscando imagen automática...',
+    imageFound: 'Imagen encontrada automáticamente',
+    imageNotFound: 'No se pudo encontrar imagen automática'
   },
   en: {
     appTitle: 'Cooking for One',
@@ -110,7 +128,10 @@ const TRANSLATIONS = {
     recipeDeleted: 'deleted successfully',
     language: 'Language',
     changeLanguage: 'Change language',
-    changed: 'changed'
+    changed: 'changed',
+    searchingImage: 'Searching for automatic image...',
+    imageFound: 'Image found automatically',
+    imageNotFound: 'Could not find automatic image'
   },
   fr: {
     appTitle: 'Cuisine pour Un',
@@ -145,15 +166,15 @@ const TRANSLATIONS = {
     info: 'Information',
     recipeTitle: 'Titre de la recette',
     recipeDescription: 'Description',
-    addIngredient: 'Ajouter un ingrédient',
-    addStep: 'Ajouter une étape',
-    saveRecipe: 'Sauvegarder la recette',
+    addIngredient: 'Ajouter ingrédient',
+    addStep: 'Ajouter étape',
+    saveRecipe: 'Sauvegarder recette',
     cancel: 'Annuler',
-    installApp: 'Installer l\'App',
+    installApp: 'Installer App',
     updateAvailable: 'Mise à jour disponible',
     updateNow: 'Mettre à jour maintenant',
     later: 'Plus tard',
-    connectionRestored: 'Connexion rétablie',
+    connectionRestored: 'Connexion restaurée',
     offlineMode: 'Mode hors ligne activé',
     linkCopied: 'Lien copié dans le presse-papiers',
     addedToFavorites: 'ajoutée aux favoris',
@@ -161,41 +182,23 @@ const TRANSLATIONS = {
     recipeDeleted: 'supprimée avec succès',
     language: 'Langue',
     changeLanguage: 'Changer de langue',
-    changed: 'changée'
+    changed: 'changé',
+    searchingImage: 'Recherche d\'image automatique...',
+    imageFound: 'Image trouvée automatiquement',
+    imageNotFound: 'Impossible de trouver une image automatique'
   }
 };
 
 /**
- * Application Configuration
- */
-const APP_CONFIG = {
-  version: '3.0.0',
-  name: 'Cocina para Uno',
-  author: 'CDA Front Developer',
-  storageKey: 'cocina-para-uno-recipes',
-  languageKey: 'cocina-para-uno-language',
-  searchDelay: 300,
-  toastDuration: 3000,
-  imageFormats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
-  maxImageSize: 5 * 1024 * 1024, // 5MB
-  apis: {
-    unsplash: {
-      baseUrl: 'https://api.unsplash.com',
-      accessKey: 'demo'
-    }
-  }
-};
-
-/**
- * Current language state
+ * Current language global variable
  */
 let currentLanguage = localStorage.getItem(APP_CONFIG.languageKey) || 'es';
 
 /**
- * Get translation for current language
+ * Translation helper function
  */
 function t(key) {
-  return TRANSLATIONS[currentLanguage]?.[key] || TRANSLATIONS.es[key] || key;
+  return TRANSLATIONS[currentLanguage]?.[key] || key;
 }
 
 /**
@@ -214,7 +217,10 @@ const DOM = {
   recipeModal: null,
   recipeFormModal: null,
   recipeForm: null,
-  toastContainer: null
+  toastContainer: null,
+  languageToggle: null,
+  languageMenu: null,
+  languageOptions: null
 };
 
 /**
@@ -234,6 +240,9 @@ function initializeDOM() {
   DOM.recipeFormModal = document.getElementById('recipe-form-modal');
   DOM.recipeForm = document.getElementById('recipe-form');
   DOM.toastContainer = document.getElementById('toast-container');
+  DOM.languageToggle = document.querySelector('.language-toggle');
+  DOM.languageMenu = document.querySelector('.language-menu');
+  DOM.languageOptions = document.querySelectorAll('.language-option');
 }
 
 /**
@@ -252,10 +261,9 @@ class Recipe {
     this.categories = data.categories || [];
     this.imageUrl = data.imageUrl || '';
     this.notes = data.notes || '';
+    this.dateCreated = data.dateCreated || new Date().toISOString();
+    this.dateModified = data.dateModified || new Date().toISOString();
     this.isFavorite = data.isFavorite || false;
-    this.createdAt = data.createdAt || new Date().toISOString();
-    this.updatedAt = data.updatedAt || new Date().toISOString();
-    this.ingredientImages = data.ingredientImages || [];
   }
 
   toJSON() {
@@ -271,69 +279,32 @@ class Recipe {
       categories: this.categories,
       imageUrl: this.imageUrl,
       notes: this.notes,
-      isFavorite: this.isFavorite,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      ingredientImages: this.ingredientImages
+      dateCreated: this.dateCreated,
+      dateModified: this.dateModified,
+      isFavorite: this.isFavorite
     };
   }
-}
 
-/**
- * Recipe Collection class
- */
-class RecipeCollection {
-  constructor() {
-    this.recipes = [];
-  }
-
-  addRecipe(recipe) {
-    this.recipes.push(recipe);
-  }
-
-  updateRecipe(updatedRecipe) {
-    const index = this.recipes.findIndex(recipe => recipe.id === updatedRecipe.id);
-    if (index !== -1) {
-      this.recipes[index] = updatedRecipe;
-    }
-  }
-
-  deleteRecipe(recipeId) {
-    this.recipes = this.recipes.filter(recipe => recipe.id !== recipeId);
-  }
-
-  findById(recipeId) {
-    return this.recipes.find(recipe => recipe.id === recipeId);
-  }
-
-  getAll() {
-    return this.recipes;
-  }
-
-  getFavorites() {
-    return this.recipes.filter(recipe => recipe.isFavorite);
-  }
-
-  getCategories() {
-    const categories = new Set();
-    this.recipes.forEach(recipe => {
-      recipe.categories.forEach(category => categories.add(category));
-    });
-    return Array.from(categories);
+  static fromJSON(data) {
+    return new Recipe(data);
   }
 }
 
 /**
- * Singleton Pattern implementation
+ * Singleton Pattern Base Class
  */
 class SingletonPattern {
   constructor() {
     if (this.constructor.instance) {
-      this.constructor.instance.initialize();
-    } else {
-      this.constructor.instance = this;
-      this.initialize();
+      return this.constructor.instance;
     }
+    this.constructor.instance = this;
+    this.initialize();
+    return this;
+  }
+
+  initialize() {
+    // Override in subclasses
   }
 
   static getInstance() {
@@ -341,10 +312,6 @@ class SingletonPattern {
       this.instance = new this();
     }
     return this.instance;
-  }
-
-  initialize() {
-    // Override in subclasses
   }
 }
 
@@ -375,7 +342,276 @@ const ObserverPattern = {
 };
 
 /**
- * Factory Pattern for Toasts
+ * Auto-Image Service for recipes and ingredients
+ */
+class ImageService {
+  static imageCache = new Map();
+  static searchHistory = new Map();
+
+  static async searchImage(query, type = 'recipe', size = '400x300') {
+    try {
+      // Check cache first
+      const cacheKey = `${query}-${type}-${size}`;
+      if (this.imageCache.has(cacheKey)) {
+        return this.imageCache.get(cacheKey);
+      }
+
+      // Simulate API call to image search service
+      // In real app, this would call Google Images API, Unsplash API, etc.
+      const imageId = this.generateImageId(query, type);
+      const imageUrl = this.buildImageUrl(imageId, size);
+      
+      // Cache the result
+      this.imageCache.set(cacheKey, imageUrl);
+      this.searchHistory.set(query, { url: imageUrl, timestamp: Date.now() });
+      
+      // Small delay to simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      return imageUrl;
+    } catch (error) {
+      console.error('Error searching for image:', error);
+      return this.getDefaultImage(type);
+    }
+  }
+
+  static generateImageId(query, type) {
+    // Generate a predictable but varied image ID based on query
+    const baseIds = {
+      recipe: ['1565299543268', '1565299507', '1565299458', '1565299401', '1565299344'],
+      ingredient: ['1506368249284', '1506368204', '1506368158', '1506368123', '1506368087']
+    };
+    
+    const seeds = baseIds[type] || baseIds.recipe;
+    const index = query.length % seeds.length;
+    return seeds[index];
+  }
+
+  static buildImageUrl(imageId, size) {
+    // Using Unsplash as example (in real app, use your preferred image service)
+    return `https://images.unsplash.com/photo-${imageId}?w=${size.split('x')[0]}&h=${size.split('x')[1]}&fit=crop&crop=center&auto=format&q=80`;
+  }
+
+  static getDefaultImage(type) {
+    const defaults = {
+      recipe: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="%236b7280">🍲</text></svg>',
+      ingredient: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="%236b7280">🥘</text></svg>'
+    };
+    return defaults[type] || defaults.recipe;
+  }
+
+  static async searchIngredientImage(ingredient) {
+    return await this.searchImage(ingredient, 'ingredient', '200x200');
+  }
+
+  static async searchRecipeImage(recipeName) {
+    return await this.searchImage(recipeName, 'recipe', '400x300');
+  }
+}
+
+/**
+ * Language Manager for multi-language support
+ */
+class LanguageManager extends SingletonPattern {
+  initialize() {
+    this.currentLanguage = currentLanguage;
+    this.availableLanguages = [
+      { code: 'es', name: 'Español', flag: '🇪🇸' },
+      { code: 'en', name: 'English', flag: '🇺🇸' },
+      { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    ];
+    
+    this.setupLanguageSelector();
+  }
+
+  setupLanguageSelector() {
+    if (!DOM.languageToggle || !DOM.languageMenu) {
+      console.warn('Language selector elements not found');
+      return;
+    }
+
+    // Update current language display
+    this.updateLanguageDisplay();
+    
+    // Add event listeners
+    this.addLanguageSelectorListeners();
+  }
+
+  updateLanguageDisplay() {
+    const currentLangData = this.availableLanguages.find(lang => lang.code === this.currentLanguage);
+    if (!currentLangData) return;
+
+    // Update toggle button
+    const flagElement = DOM.languageToggle.querySelector('.language-toggle__flag');
+    const textElement = DOM.languageToggle.querySelector('.language-toggle__text');
+    
+    if (flagElement) flagElement.textContent = currentLangData.flag;
+    if (textElement) textElement.textContent = currentLangData.code.toUpperCase();
+
+    // Update aria-current on options
+    DOM.languageOptions.forEach(option => {
+      const isActive = option.getAttribute('data-lang') === this.currentLanguage;
+      option.setAttribute('aria-current', isActive);
+      
+      if (isActive) {
+        option.classList.add('language-option--active');
+      } else {
+        option.classList.remove('language-option--active');
+      }
+    });
+  }
+
+  addLanguageSelectorListeners() {
+    // Toggle dropdown
+    DOM.languageToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const isOpen = !DOM.languageMenu.hasAttribute('hidden');
+      
+      if (isOpen) {
+        DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageToggle.setAttribute('aria-expanded', 'false');
+      } else {
+        DOM.languageMenu.removeAttribute('hidden');
+        DOM.languageToggle.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Language option selection
+    DOM.languageOptions.forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.preventDefault();
+        const newLanguage = option.getAttribute('data-lang');
+        this.changeLanguage(newLanguage);
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.language-selector')) {
+        DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !DOM.languageMenu.hasAttribute('hidden')) {
+        DOM.languageMenu.setAttribute('hidden', '');
+        DOM.languageToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  changeLanguage(newLanguage) {
+    if (newLanguage === this.currentLanguage) return;
+
+    const oldLanguage = this.currentLanguage;
+    this.currentLanguage = newLanguage;
+    currentLanguage = newLanguage;
+
+    // Save to localStorage
+    localStorage.setItem(APP_CONFIG.languageKey, newLanguage);
+
+    // Update HTML lang attribute
+    document.documentElement.lang = newLanguage;
+
+    // Update display
+    this.updateLanguageDisplay();
+
+    // Hide dropdown
+    DOM.languageMenu.setAttribute('hidden', '');
+    DOM.languageToggle.setAttribute('aria-expanded', 'false');
+
+    // Trigger language change event
+    ObserverPattern.notifyObservers('languageChanged', { 
+      from: oldLanguage, 
+      to: newLanguage 
+    });
+
+    // Update all UI text
+    this.updateUITexts();
+
+    // Show success message
+    const langName = this.availableLanguages.find(l => l.code === newLanguage)?.name;
+    showToast('success', `${t('language')} ${t('changed')}: ${langName}`);
+  }
+
+  updateUITexts() {
+    // Update document title
+    document.title = `🍲 ${t('appTitle')} | ${t('appSubtitle')}`;
+
+    // Update header
+    const headerTitle = document.querySelector('.header__title .header__text');
+    const headerSubtitle = document.querySelector('.header__subtitle');
+    
+    if (headerTitle) headerTitle.textContent = t('appTitle');
+    if (headerSubtitle) headerSubtitle.textContent = t('appSubtitle');
+
+    // Update search placeholder
+    if (DOM.searchInput) {
+      DOM.searchInput.setAttribute('placeholder', t('searchPlaceholder'));
+    }
+
+    // Update buttons
+    const newRecipeBtn = document.querySelector('.btn--add-recipe .btn__text');
+    if (newRecipeBtn) newRecipeBtn.textContent = t('newRecipe');
+
+    // Update filter buttons
+    const allBtn = document.querySelector('[data-filter="all"] .filter-btn__text');
+    const favBtn = document.querySelector('[data-filter="favorites"] .filter-btn__text');
+    const catBtn = document.querySelector('.dropdown__trigger .filter-btn__text');
+    
+    if (allBtn) allBtn.textContent = t('allRecipes');
+    if (favBtn) favBtn.textContent = t('favorites');
+    if (catBtn) catBtn.textContent = t('categories');
+
+    // Update empty state
+    const emptyTitle = document.querySelector('.empty-state__title');
+    const emptyDesc = document.querySelector('.empty-state__description');
+    const emptyBtn = document.querySelector('.btn--add-first-recipe .btn__text');
+    
+    if (emptyTitle) emptyTitle.textContent = t('emptyStateTitle');
+    if (emptyDesc) emptyDesc.textContent = t('emptyStateDescription');
+    if (emptyBtn) emptyBtn.textContent = t('addFirstRecipe');
+
+    // Update no results state
+    const noResultsTitle = document.querySelector('.no-results__title');
+    const noResultsDesc = document.querySelector('.no-results__description');
+    
+    if (noResultsTitle) noResultsTitle.textContent = t('noResultsTitle');
+    if (noResultsDesc) noResultsDesc.textContent = t('noResultsDescription');
+
+    // Update stats labels
+    const statLabels = document.querySelectorAll('.stat-item__label');
+    if (statLabels.length >= 3) {
+      statLabels[0].textContent = t('recipes');
+      statLabels[1].textContent = t('favorites');
+      statLabels[2].textContent = t('categories');
+    }
+
+    // Update form modal if it exists
+    const formTitle = document.getElementById('form-modal-title');
+    if (formTitle) formTitle.textContent = t('newRecipe');
+
+    // Update theme toggle aria-label
+    if (DOM.themeToggle) {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      DOM.themeToggle.setAttribute('aria-label', 
+        isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+      );
+    }
+
+    // Re-render recipes if app is available
+    if (window.app) {
+      window.app.render();
+    }
+  }
+}
+
+/**
+ * Toast Factory for notifications
  */
 class ToastFactory {
   static create(type, message, options = {}) {
@@ -398,279 +634,124 @@ class ToastFactory {
         <span class="toast__message">${message}</span>
         ${options.dismissible !== false ? `
           <button class="toast__close" aria-label="${t('close')}">
-            <span aria-hidden="true">✕</span>
+            <span aria-hidden="true">×</span>
           </button>
         ` : ''}
       </div>
     `;
 
-    // Add close functionality
-    if (options.dismissible !== false) {
-      const closeBtn = toast.querySelector('.toast__close');
-      closeBtn?.addEventListener('click', () => {
-        toast.classList.add('toast--removing');
-        setTimeout(() => toast.remove(), 200);
-      });
+    // Auto dismiss
+    if (options.autoDismiss !== false) {
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.remove();
+        }
+      }, options.duration || (type === 'loading' ? 8000 : 4000));
     }
 
-    // Add entrance animation
-    requestAnimationFrame(() => {
-      toast.classList.add('toast--show');
-    });
+    // Close button functionality
+    const closeBtn = toast.querySelector('.toast__close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => toast.remove());
+    }
 
     return toast;
   }
 }
 
 /**
- * Image API Service for automatic image fetching
+ * Global toast function
  */
-class ImageService {
-  static async searchImage(query, type = 'recipe') {
-    // For demo purposes, return placeholder images
-    const placeholderImages = {
-      recipe: [
-        'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
-        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-        'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400',
-        'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400'
-      ],
-      ingredient: [
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200',
-        'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200',
-        'https://images.unsplash.com/photo-1514326640560-7d063ef2aed5?w=200',
-        'https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=200'
-      ]
-    };
+function showToast(type, message, options = {}) {
+  if (!DOM.toastContainer) return;
 
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Return random image from placeholder collection
-      const images = placeholderImages[type] || placeholderImages.recipe;
-      const randomIndex = Math.floor(Math.random() * images.length);
-      
-      return {
-        url: images[randomIndex],
-        alt: `${query} image`,
-        description: `Image for ${query}`
-      };
-    } catch (error) {
-      console.error('Error fetching image:', error);
-      return null;
-    }
-  }
+  const toast = ToastFactory.create(type, message, options);
+  DOM.toastContainer.appendChild(toast);
 
-  static async searchIngredientImages(ingredients) {
-    const images = [];
-    
-    for (const ingredient of ingredients) {
-      const image = await this.searchImage(ingredient, 'ingredient');
-      if (image) {
-        images.push({
-          ingredient,
-          ...image
-        });
-      }
-    }
-    
-    return images;
-  }
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toast.classList.add('toast--show');
+  });
+
+  return toast;
 }
 
 /**
- * Language Manager for multi-language support
+ * Theme Manager for dark/light mode
  */
-class LanguageManager extends SingletonPattern {
+class ThemeManager extends SingletonPattern {
   initialize() {
-    this.currentLanguage = currentLanguage;
-    this.availableLanguages = [
-      { code: 'es', name: 'Español', flag: '🇪🇸' },
-      { code: 'en', name: 'English', flag: '🇺🇸' },
-      { code: 'fr', name: 'Français', flag: '🇫🇷' }
-    ];
+    this.currentTheme = localStorage.getItem(APP_CONFIG.themeKey) || 'light';
+    this.applyTheme();
+    this.setupThemeToggle();
+  }
+
+  applyTheme() {
+    document.body.setAttribute('data-theme', this.currentTheme);
+    this.updateThemeToggle();
+  }
+
+  updateThemeToggle() {
+    if (!DOM.themeToggle) return;
+
+    const isDark = this.currentTheme === 'dark';
+    const icon = DOM.themeToggle.querySelector('.theme-toggle__icon');
     
-    this.createLanguageSelector();
-  }
-
-  createLanguageSelector() {
-    if (document.getElementById('language-selector')) return;
-
-    const languageSelector = document.createElement('div');
-    languageSelector.id = 'language-selector';
-    languageSelector.className = 'language-selector';
+    if (icon) {
+      icon.textContent = isDark ? '☀️' : '🌙';
+    }
     
-    languageSelector.innerHTML = `
-      <button class="language-selector__toggle" aria-label="${t('changeLanguage')}">
-        <span class="language-selector__flag">${this.getCurrentLanguageFlag()}</span>
-        <span class="language-selector__code">${this.currentLanguage.toUpperCase()}</span>
-      </button>
-      <div class="language-selector__dropdown">
-        ${this.availableLanguages.map(lang => `
-          <button class="language-selector__option ${lang.code === this.currentLanguage ? 'language-selector__option--active' : ''}" 
-                  data-language="${lang.code}">
-            <span class="language-selector__flag">${lang.flag}</span>
-            <span class="language-selector__name">${lang.name}</span>
-          </button>
-        `).join('')}
-      </div>
-    `;
-
-    // Add to header
-    const headerContainer = document.querySelector('.header__container');
-    if (headerContainer) {
-      headerContainer.appendChild(languageSelector);
-    }
-
-    // Add event listeners
-    this.addLanguageSelectorListeners(languageSelector);
+    DOM.themeToggle.setAttribute('aria-pressed', isDark);
+    DOM.themeToggle.setAttribute('aria-label', 
+      isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+    );
   }
 
-  addLanguageSelectorListeners(selector) {
-    const toggle = selector.querySelector('.language-selector__toggle');
-    const dropdown = selector.querySelector('.language-selector__dropdown');
-    const options = selector.querySelectorAll('.language-selector__option');
+  setupThemeToggle() {
+    if (!DOM.themeToggle) return;
 
-    toggle.addEventListener('click', () => {
-      dropdown.classList.toggle('language-selector__dropdown--open');
-    });
-
-    options.forEach(option => {
-      option.addEventListener('click', () => {
-        const language = option.dataset.language;
-        this.changeLanguage(language);
-        dropdown.classList.remove('language-selector__dropdown--open');
-      });
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!selector.contains(e.target)) {
-        dropdown.classList.remove('language-selector__dropdown--open');
-      }
+    DOM.themeToggle.addEventListener('click', () => {
+      this.toggleTheme();
     });
   }
 
-  getCurrentLanguageFlag() {
-    const lang = this.availableLanguages.find(l => l.code === this.currentLanguage);
-    return lang ? lang.flag : '🌍';
-  }
-
-  changeLanguage(newLanguage) {
-    if (newLanguage === this.currentLanguage) return;
-
-    this.currentLanguage = newLanguage;
-    currentLanguage = newLanguage;
-    localStorage.setItem(APP_CONFIG.languageKey, newLanguage);
-
-    // Update UI
-    this.updateUITexts();
-    this.updateLanguageSelector();
-
-    // Show success message
-    showToast('success', `${t('language')} ${t('changed')}`);
-  }
-
-  updateUITexts() {
-    // Update page title
-    document.title = `🍲 ${t('appTitle')} | ${t('appSubtitle')}`;
-
-    // Update header texts
-    const headerTitle = document.querySelector('.header__text');
-    const headerSubtitle = document.querySelector('.header__subtitle');
-    if (headerTitle) headerTitle.textContent = t('appTitle');
-    if (headerSubtitle) headerSubtitle.textContent = t('appSubtitle');
-
-    // Update search placeholder
-    if (DOM.searchInput) {
-      DOM.searchInput.placeholder = t('searchPlaceholder');
-    }
-
-    // Update filter buttons
-    DOM.filterButtons?.forEach(btn => {
-      const filter = btn.dataset.filter;
-      if (filter === 'all') btn.textContent = t('allRecipes');
-      if (filter === 'favorites') btn.textContent = t('favorites');
-    });
-
-    // Update empty state
-    const emptyTitle = document.querySelector('.empty-state__title');
-    const emptyDescription = document.querySelector('.empty-state__description');
-    const emptyButton = document.querySelector('.btn--add-first-recipe');
+  toggleTheme() {
+    this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem(APP_CONFIG.themeKey, this.currentTheme);
+    this.applyTheme();
     
-    if (emptyTitle) emptyTitle.textContent = t('emptyStateTitle');
-    if (emptyDescription) emptyDescription.textContent = t('emptyStateDescription');
-    if (emptyButton) emptyButton.textContent = t('addFirstRecipe');
-
-    // Update no results state
-    const noResultsTitle = document.querySelector('.no-results__title');
-    const noResultsDescription = document.querySelector('.no-results__description');
-    
-    if (noResultsTitle) noResultsTitle.textContent = t('noResultsTitle');
-    if (noResultsDescription) noResultsDescription.textContent = t('noResultsDescription');
-
-    // Re-render recipes to update action buttons
-    if (window.app) {
-      window.app.render();
-    }
-  }
-
-  updateLanguageSelector() {
-    const toggle = document.querySelector('.language-selector__toggle');
-    if (toggle) {
-      const flag = toggle.querySelector('.language-selector__flag');
-      const code = toggle.querySelector('.language-selector__code');
-      
-      if (flag) flag.textContent = this.getCurrentLanguageFlag();
-      if (code) code.textContent = this.currentLanguage.toUpperCase();
-    }
-
-    // Update active option
-    const options = document.querySelectorAll('.language-selector__option');
-    options.forEach(option => {
-      option.classList.toggle('language-selector__option--active', 
-        option.dataset.language === this.currentLanguage);
-    });
+    showToast('info', `Tema ${this.currentTheme === 'dark' ? 'oscuro' : 'claro'} activado`);
   }
 }
 
 /**
- * PWA Manager
+ * PWA Manager for app-like features
  */
 class PWAManager extends SingletonPattern {
   initialize() {
     this.deferredPrompt = null;
-    this.isInstalled = false;
-    this.updateAvailable = false;
-    
+    this.setupPWAFeatures();
+  }
+
+  setupPWAFeatures() {
+    // Service Worker registration
     this.registerServiceWorker();
+    
+    // Install prompt handling
     this.setupInstallPrompt();
-    this.addPWAEventListeners();
+    
+    // Online/offline detection
+    this.setupOnlineDetection();
   }
 
   async registerServiceWorker() {
-    if (!('serviceWorker' in navigator)) {
-      console.info('🔧 Service Worker not supported');
-      return;
-    }
-
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            this.updateAvailable = true;
-            this.showUpdateNotification();
-          }
-        });
-      });
-
-      console.info('🎉 Service Worker registered successfully');
-    } catch (error) {
-      console.error('❌ Service Worker registration failed:', error);
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.register('./sw.js');
+        console.log('✅ Service Worker registered:', registration);
+      } catch (error) {
+        console.error('❌ Service Worker registration failed:', error);
+      }
     }
   }
 
@@ -680,579 +761,21 @@ class PWAManager extends SingletonPattern {
       this.deferredPrompt = e;
       this.showInstallButton();
     });
-
-    window.addEventListener('appinstalled', () => {
-      this.isInstalled = true;
-      this.hideInstallButton();
-      showToast('success', `¡${t('installApp')} ${t('success')}! 🎉`);
-    });
-  }
-
-  addPWAEventListeners() {
-    this.createInstallButton();
-    
-    window.addEventListener('online', () => {
-      showToast('success', `🌐 ${t('connectionRestored')}`);
-    });
-
-    window.addEventListener('offline', () => {
-      showToast('info', `📱 ${t('offlineMode')}`);
-    });
-  }
-
-  createInstallButton() {
-    if (document.getElementById('pwa-install-btn')) return;
-
-    const installBtn = document.createElement('button');
-    installBtn.id = 'pwa-install-btn';
-    installBtn.className = 'btn btn--secondary btn--icon pwa-install-btn';
-    installBtn.innerHTML = `
-      <span class="btn__icon" aria-hidden="true">📱</span>
-      <span class="btn__text">${t('installApp')}</span>
-    `;
-    installBtn.style.display = 'none';
-    installBtn.setAttribute('aria-label', t('installApp'));
-    
-    installBtn.addEventListener('click', () => this.installApp());
-    
-    const headerContainer = document.querySelector('.header__container');
-    if (headerContainer) {
-      headerContainer.appendChild(installBtn);
-    }
   }
 
   showInstallButton() {
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn && !this.isInstalled) {
-      installBtn.style.display = 'flex';
-    }
+    // You can implement an install button here
+    console.log('📱 App can be installed');
   }
 
-  hideInstallButton() {
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-      installBtn.style.display = 'none';
-    }
-  }
-
-  async installApp() {
-    if (!this.deferredPrompt) return;
-
-    try {
-      this.deferredPrompt.prompt();
-      const { outcome } = await this.deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.info('🎉 PWA installation accepted');
-      } else {
-        console.info('📱 PWA installation declined');
-      }
-      
-      this.deferredPrompt = null;
-      this.hideInstallButton();
-    } catch (error) {
-      console.error('❌ PWA installation failed:', error);
-    }
-  }
-
-  showUpdateNotification() {
-    const updateToast = document.createElement('div');
-    updateToast.className = 'toast toast--info';
-    updateToast.innerHTML = `
-      <div class="toast__content">
-        <div class="toast__message">
-          <strong>🔄 ${t('updateAvailable')}</strong>
-          <p>Hay una nueva versión de la app disponible</p>
-        </div>
-        <div class="toast__actions">
-          <button class="btn btn--sm btn--primary" onclick="location.reload()">
-            ${t('updateNow')}
-          </button>
-          <button class="btn btn--sm btn--ghost" onclick="this.closest('.toast').remove()">
-            ${t('later')}
-          </button>
-        </div>
-      </div>
-    `;
-    
-    if (DOM.toastContainer) {
-      DOM.toastContainer.appendChild(updateToast);
-    }
-  }
-}
-
-/**
- * Application State Management
- */
-class AppState extends SingletonPattern {
-  initialize() {
-    this.currentFilter = 'all';
-    this.currentSearch = '';
-    this.currentTheme = localStorage.getItem('theme') || 'light';
-    this.recipes = new RecipeCollection();
-    this.filteredRecipes = [];
-    this.isLoading = false;
-    this.activeModal = null;
-    
-    // Add observer pattern methods
-    Object.assign(this, ObserverPattern);
-    
-    this.loadRecipesFromStorage();
-  }
-
-  setFilter(filter) {
-    this.currentFilter = filter;
-    this.filterAndSearchRecipes();
-    this.notifyObservers('filterChanged', filter);
-  }
-
-  setSearch(searchTerm) {
-    this.currentSearch = searchTerm;
-    this.filterAndSearchRecipes();
-    this.notifyObservers('searchChanged', searchTerm);
-  }
-
-  filterAndSearchRecipes() {
-    let recipes = this.recipes.getAll();
-
-    // Apply filter
-    if (this.currentFilter !== 'all') {
-      if (this.currentFilter === 'favorites') {
-        recipes = recipes.filter(recipe => recipe.isFavorite);
-      } else {
-        recipes = recipes.filter(recipe => 
-          recipe.categories.some(cat => 
-            cat.toLowerCase().includes(this.currentFilter.toLowerCase())
-          )
-        );
-      }
-    }
-
-    // Apply search
-    if (this.currentSearch.trim()) {
-      const searchTerm = this.currentSearch.toLowerCase();
-      recipes = recipes.filter(recipe => 
-        recipe.title.toLowerCase().includes(searchTerm) ||
-        recipe.ingredients.some(ingredient => 
-          ingredient.toLowerCase().includes(searchTerm)
-        ) ||
-        recipe.categories.some(category => 
-          category.toLowerCase().includes(searchTerm)
-        )
-      );
-    }
-
-    this.filteredRecipes = recipes;
-  }
-
-  async loadRecipesFromStorage() {
-    try {
-      const savedRecipes = localStorage.getItem(APP_CONFIG.storageKey);
-      if (savedRecipes) {
-        const recipesData = JSON.parse(savedRecipes);
-        recipesData.forEach(recipeData => {
-          const recipe = new Recipe(recipeData);
-          this.recipes.addRecipe(recipe);
-        });
-      }
-      
-      this.filterAndSearchRecipes();
-      console.log(`📚 Loaded ${this.recipes.getAll().length} recipes from storage`);
-    } catch (error) {
-      console.error('❌ Error loading recipes from storage:', error);
-    }
-  }
-
-  saveRecipes() {
-    try {
-      const recipesData = this.recipes.getAll().map(recipe => recipe.toJSON());
-      localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(recipesData));
-      console.log(`💾 Saved ${recipesData.length} recipes to storage`);
-    } catch (error) {
-      console.error('❌ Failed to save recipes to storage:', error);
-    }
-  }
-
-  async addRecipe(recipeData) {
-    try {
-      // Auto-fetch recipe image if title is provided
-      if (recipeData.title && !recipeData.imageUrl) {
-        const image = await ImageService.searchImage(recipeData.title, 'recipe');
-        if (image) {
-          recipeData.imageUrl = image.url;
-        }
-      }
-
-      // Auto-fetch ingredient images
-      if (recipeData.ingredients && recipeData.ingredients.length > 0) {
-        const ingredientImages = await ImageService.searchIngredientImages(recipeData.ingredients);
-        recipeData.ingredientImages = ingredientImages;
-      }
-
-      const recipe = new Recipe(recipeData);
-      this.recipes.addRecipe(recipe);
-      this.saveRecipes();
-      this.filterAndSearchRecipes();
-      this.notifyObservers('recipeAdded', recipe);
-      
-      showToast('success', `✅ Receta "${recipe.title}" creada correctamente`);
-      return recipe;
-    } catch (error) {
-      console.error('❌ Error creating recipe:', error);
-      showToast('error', `❌ ${t('error')} creating recipe`);
-      throw error;
-    }
-  }
-
-  toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Update button state
-    if (DOM.themeToggle) {
-      DOM.themeToggle.setAttribute('aria-pressed', newTheme === 'dark');
-      DOM.themeToggle.setAttribute('aria-label', 
-        newTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
-      );
-      
-      const icon = DOM.themeToggle.querySelector('.theme-toggle__icon');
-      if (icon) {
-        icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-      }
-    }
-    
-    this.currentTheme = newTheme;
-    this.notifyObservers('themeChanged', newTheme);
-  }
-}
-
-/**
- * Global toast function
- */
-function showToast(type, message, options = {}) {
-  const toast = ToastFactory.create(type, message, options);
-  if (DOM.toastContainer) {
-    DOM.toastContainer.appendChild(toast);
-    
-    // Auto remove after duration
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.remove();
-      }
-    }, APP_CONFIG.toastDuration);
-  }
-}
-
-/**
- * UI Controller
- */
-class UIController {
-  constructor(appState) {
-    this.appState = appState;
-    this.searchTimeout = null;
-    this.setupEventListeners();
-    this.setupObservers();
-  }
-
-  setupEventListeners() {
-    // Search functionality
-    DOM.searchInput?.addEventListener('input', (e) => {
-      this.handleSearch(e.target.value);
-      this.toggleClearButton(e.target.value);
+  setupOnlineDetection() {
+    window.addEventListener('online', () => {
+      showToast('success', t('connectionRestored'));
     });
 
-    DOM.searchClear?.addEventListener('click', () => {
-      DOM.searchInput.value = '';
-      this.handleSearch('');
-      this.toggleClearButton('');
+    window.addEventListener('offline', () => {
+      showToast('warning', t('offlineMode'));
     });
-
-    // Filter buttons
-    DOM.filterButtons?.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.handleFilterChange(btn.dataset.filter);
-      });
-    });
-
-    // Theme toggle
-    DOM.themeToggle?.addEventListener('click', () => {
-      this.appState.toggleTheme();
-    });
-
-    // Add recipe buttons
-    const addRecipeButtons = document.querySelectorAll('.btn--add-recipe, .btn--add-first-recipe');
-    addRecipeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.showRecipeForm();
-      });
-    });
-  }
-
-  setupObservers() {
-    this.appState.subscribe('filterChanged', () => {
-      this.updateFilterButtons();
-      this.render();
-    });
-
-    this.appState.subscribe('searchChanged', () => {
-      this.updateSearchResults();
-      this.render();
-    });
-  }
-
-  handleSearch(searchTerm) {
-    // Debounce search
-    clearTimeout(this.searchTimeout);
-    this.searchTimeout = setTimeout(() => {
-      this.appState.setSearch(searchTerm);
-    }, APP_CONFIG.searchDelay);
-  }
-
-  handleFilterChange(filter) {
-    this.appState.setFilter(filter);
-  }
-
-  toggleClearButton(value) {
-    if (DOM.searchClear) {
-      DOM.searchClear.hidden = !value.trim();
-    }
-  }
-
-  updateFilterButtons() {
-    DOM.filterButtons?.forEach(btn => {
-      const isActive = btn.dataset.filter === this.appState.currentFilter;
-      btn.classList.toggle('filter-btn--active', isActive);
-      btn.setAttribute('aria-pressed', isActive);
-    });
-  }
-
-  updateSearchResults() {
-    if (DOM.searchResults) {
-      const count = this.appState.filteredRecipes.length;
-      const total = this.appState.recipes.getAll().length;
-      
-      if (this.appState.currentSearch.trim()) {
-        DOM.searchResults.textContent = `${count} de ${total} ${t('recipes').toLowerCase()}`;
-      } else {
-        DOM.searchResults.textContent = '';
-      }
-    }
-  }
-
-  render() {
-    this.renderRecipes();
-    this.updateStates();
-  }
-
-  renderRecipes() {
-    const recipes = this.appState.filteredRecipes;
-    const hasRecipes = recipes.length > 0;
-    const totalRecipes = this.appState.recipes.getAll().length;
-
-    // Show/hide states
-    if (DOM.recipesGrid) DOM.recipesGrid.style.display = hasRecipes ? 'grid' : 'none';
-    if (DOM.emptyState) DOM.emptyState.hidden = hasRecipes || totalRecipes > 0;
-    if (DOM.noResults) DOM.noResults.hidden = hasRecipes || totalRecipes === 0;
-
-    if (!hasRecipes) return;
-
-    // Render recipe cards
-    DOM.recipesGrid.innerHTML = recipes.map(recipe => this.createRecipeCard(recipe)).join('');
-
-    // Add event listeners to recipe cards
-    this.attachRecipeCardListeners();
-  }
-
-  createRecipeCard(recipe) {
-    const categoriesHtml = recipe.categories
-      .slice(0, 3)
-      .map(cat => `<span class="category-tag category-tag--${cat.toLowerCase()}">${cat}</span>`)
-      .join('');
-
-    return `
-      <article class="recipe-card" data-recipe-id="${recipe.id}">
-        <div class="recipe-card__image">
-          ${recipe.imageUrl ? 
-            `<img src="${recipe.imageUrl}" alt="${recipe.title}" loading="lazy">` :
-            `<div class="recipe-card__placeholder">🍽️</div>`
-          }
-          <button class="recipe-card__favorite ${recipe.isFavorite ? 'recipe-card__favorite--active' : ''}" 
-                  aria-label="${recipe.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}"
-                  data-action="toggle-favorite">
-            <span aria-hidden="true">${recipe.isFavorite ? '❤️' : '🤍'}</span>
-          </button>
-        </div>
-        
-        <div class="recipe-card__content">
-          <header class="recipe-card__header">
-            <h3 class="recipe-card__title">${recipe.title}</h3>
-          </header>
-          
-          <div class="recipe-card__meta">
-            <span class="recipe-card__time">
-              <span aria-hidden="true">⏱️</span>
-              ${recipe.cookingTime} min
-            </span>
-          </div>
-          
-          ${categoriesHtml ? `<div class="recipe-card__categories">${categoriesHtml}</div>` : ''}
-          
-          <div class="recipe-card__actions">
-            <button class="recipe-card__action" data-action="view" aria-label="${t('view')}">
-              <span aria-hidden="true">👁️</span>
-            </button>
-            <button class="recipe-card__action" data-action="edit" aria-label="${t('edit')}">
-              <span aria-hidden="true">✏️</span>
-            </button>
-            <button class="recipe-card__action" data-action="share" aria-label="${t('share')}">
-              <span aria-hidden="true">📤</span>
-            </button>
-            <button class="recipe-card__action" data-action="delete" aria-label="${t('delete')}">
-              <span aria-hidden="true">🗑️</span>
-            </button>
-          </div>
-        </div>
-      </article>
-    `;
-  }
-
-  attachRecipeCardListeners() {
-    const recipeCards = DOM.recipesGrid?.querySelectorAll('.recipe-card');
-    
-    recipeCards?.forEach(card => {
-      const recipeId = card.dataset.recipeId;
-      const recipe = this.appState.recipes.findById(recipeId);
-      
-      if (!recipe) return;
-      
-      // Add click event for viewing recipe
-      card.addEventListener('click', (e) => {
-        if (!e.target.closest('.recipe-card__action, .recipe-card__favorite')) {
-          this.showRecipeDetails(recipe);
-        }
-      });
-      
-      // Add action button events
-      const actions = card.querySelectorAll('.recipe-card__action');
-      actions.forEach(action => {
-        action.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          const actionType = action.dataset.action;
-          this.handleRecipeAction(actionType, recipe);
-        });
-      });
-      
-      // Add favorite button event
-      const favoriteBtn = card.querySelector('.recipe-card__favorite');
-      favoriteBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.toggleFavorite(recipe);
-      });
-    });
-  }
-
-  handleRecipeAction(actionType, recipe) {
-    switch (actionType) {
-      case 'view':
-        this.showRecipeDetails(recipe);
-        break;
-      case 'edit':
-        this.showRecipeForm(recipe);
-        break;
-      case 'share':
-        this.shareRecipe(recipe);
-        break;
-      case 'delete':
-        this.showDeleteConfirmation(recipe);
-        break;
-    }
-  }
-
-  toggleFavorite(recipe) {
-    recipe.isFavorite = !recipe.isFavorite;
-    recipe.updatedAt = new Date().toISOString();
-    
-    this.appState.recipes.updateRecipe(recipe);
-    this.appState.saveRecipes();
-    this.render();
-    
-    const message = recipe.isFavorite ? 
-      `✅ "${recipe.title}" ${t('addedToFavorites')}` : 
-      `💔 "${recipe.title}" ${t('removedFromFavorites')}`;
-    
-    showToast('success', message);
-  }
-
-  async shareRecipe(recipe) {
-    const shareData = {
-      title: `🍲 ${recipe.title} - ${t('appTitle')}`,
-      text: `${t('view')}: ${recipe.title}. ${t('cookingTime')}: ${recipe.cookingTime} min.`,
-      url: window.location.href
-    };
-
-    try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback to clipboard
-        const textToShare = `${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`;
-        await navigator.clipboard.writeText(textToShare);
-        showToast('success', `📋 ${t('linkCopied')}`);
-      }
-    } catch (error) {
-      console.error('❌ Share failed:', error);
-      showToast('error', `❌ ${t('error')} sharing recipe`);
-    }
-  }
-
-  showDeleteConfirmation(recipe) {
-    const confirmMessage = `¿Estás seguro de que quieres eliminar la receta "${recipe.title}"? Esta acción no se puede deshacer.`;
-    
-    if (confirm(confirmMessage)) {
-      this.appState.recipes.deleteRecipe(recipe.id);
-      this.appState.saveRecipes();
-      this.render();
-      
-      showToast('success', `🗑️ Receta "${recipe.title}" ${t('recipeDeleted')}`);
-    }
-  }
-
-  showRecipeDetails(recipe) {
-    // For now, just show a toast - modal functionality would be implemented here
-    showToast('info', `${t('view')}: ${recipe.title}`);
-  }
-
-  showRecipeForm(recipe = null) {
-    // For now, just show a simple form dialog
-    const title = recipe ? `${t('edit')} ${recipe.title}` : t('newRecipe');
-    
-    // Create a simple test recipe
-    const testRecipeData = {
-      title: `Receta de prueba ${Date.now()}`,
-      description: 'Una deliciosa receta de prueba',
-      ingredients: ['Ingrediente 1', 'Ingrediente 2', 'Ingrediente 3'],
-      steps: ['Paso 1: Preparar ingredientes', 'Paso 2: Cocinar', 'Paso 3: Servir'],
-      cookingTime: 30,
-      difficulty: 'Fácil',
-      servings: 2,
-      categories: ['Prueba', 'Rápido'],
-      notes: 'Esta es una receta de prueba para demostrar la funcionalidad'
-    };
-    
-    // Add the test recipe
-    this.appState.addRecipe(testRecipeData);
-    
-    showToast('info', `${title} - Funcionalidad de formulario próximamente disponible. Se ha agregado una receta de prueba.`);
-  }
-
-  updateStates() {
-    // Update any additional UI states here
   }
 }
 
@@ -1261,8 +784,10 @@ class UIController {
  */
 class OneCookingApp {
   constructor() {
-    this.appState = AppState.getInstance();
-    this.uiController = new UIController(this.appState);
+    this.recipes = [];
+    this.favorites = new Set();
+    this.currentFilter = 'all';
+    this.searchQuery = '';
     this.initialized = false;
   }
 
@@ -1270,10 +795,12 @@ class OneCookingApp {
     try {
       console.log('🔧 Initializing Cocina para Uno...');
       
-      // Setup initial theme
-      this.setupTheme();
+      // Load data
+      this.loadRecipes();
+      this.loadFavorites();
       
-      // Initialize UI
+      // Setup UI
+      this.setupEventListeners();
       this.render();
       
       // Mark as initialized
@@ -1283,36 +810,818 @@ class OneCookingApp {
       
     } catch (error) {
       console.error('❌ Application initialization failed:', error);
-      throw error;
+      showToast('error', 'Error al inicializar la aplicación');
     }
   }
 
-  setupTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    this.appState.currentTheme = savedTheme;
-    
-    if (DOM.themeToggle) {
-      DOM.themeToggle.setAttribute('aria-pressed', savedTheme === 'dark');
-      DOM.themeToggle.setAttribute('aria-label', 
-        savedTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
-      );
-      
-      const icon = DOM.themeToggle.querySelector('.theme-toggle__icon');
-      if (icon) {
-        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-      }
+  loadRecipes() {
+    try {
+      const stored = localStorage.getItem(APP_CONFIG.recipesKey);
+      this.recipes = stored ? JSON.parse(stored).map(data => Recipe.fromJSON(data)) : [];
+    } catch (error) {
+      console.error('Error loading recipes:', error);
+      this.recipes = [];
     }
+  }
+
+  loadFavorites() {
+    try {
+      const stored = localStorage.getItem(APP_CONFIG.favoritesKey);
+      this.favorites = new Set(stored ? JSON.parse(stored) : []);
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      this.favorites = new Set();
+    }
+  }
+
+  saveRecipes() {
+    try {
+      localStorage.setItem(APP_CONFIG.recipesKey, JSON.stringify(this.recipes));
+    } catch (error) {
+      console.error('Error saving recipes:', error);
+    }
+  }
+
+  saveFavorites() {
+    try {
+      localStorage.setItem(APP_CONFIG.favoritesKey, JSON.stringify([...this.favorites]));
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+    }
+  }
+
+  setupEventListeners() {
+    // Add recipe buttons
+    const addRecipeBtn = document.querySelector('.btn--add-recipe');
+    const addFirstRecipeBtn = document.querySelector('.btn--add-first-recipe');
+    
+    if (addRecipeBtn) {
+      addRecipeBtn.addEventListener('click', () => this.showRecipeForm());
+    }
+    
+    if (addFirstRecipeBtn) {
+      addFirstRecipeBtn.addEventListener('click', () => this.showRecipeForm());
+    }
+
+    // Search functionality
+    if (DOM.searchInput) {
+      DOM.searchInput.addEventListener('input', this.debounce((e) => {
+        this.searchQuery = e.target.value.trim();
+        this.render();
+        this.updateSearchClear();
+      }, 300));
+    }
+
+    if (DOM.searchClear) {
+      DOM.searchClear.addEventListener('click', () => {
+        DOM.searchInput.value = '';
+        this.searchQuery = '';
+        this.render();
+        this.updateSearchClear();
+      });
+    }
+
+    // Filter buttons
+    DOM.filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.setActiveFilter(btn.dataset.filter);
+        this.render();
+      });
+    });
+  }
+
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  updateSearchClear() {
+    if (!DOM.searchClear) return;
+    
+    if (this.searchQuery) {
+      DOM.searchClear.removeAttribute('hidden');
+    } else {
+      DOM.searchClear.setAttribute('hidden', '');
+    }
+  }
+
+  setActiveFilter(filter) {
+    this.currentFilter = filter;
+    
+    DOM.filterButtons.forEach(btn => {
+      const isActive = btn.dataset.filter === filter;
+      btn.classList.toggle('filter-btn--active', isActive);
+      btn.setAttribute('aria-pressed', isActive);
+    });
+  }
+
+  getFilteredRecipes() {
+    let filtered = [...this.recipes];
+
+    // Apply search filter
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(recipe => 
+        recipe.title.toLowerCase().includes(query) ||
+        recipe.description.toLowerCase().includes(query) ||
+        recipe.ingredients.some(ing => ing.toLowerCase().includes(query)) ||
+        recipe.categories.some(cat => cat.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply type filter
+    if (this.currentFilter === 'favorites') {
+      filtered = filtered.filter(recipe => this.favorites.has(recipe.id));
+    }
+
+    return filtered;
   }
 
   render() {
-    this.uiController.render();
+    const filteredRecipes = this.getFilteredRecipes();
+    this.renderRecipes(filteredRecipes);
+    this.updateStats();
+    this.updateResultsCount(filteredRecipes.length);
+  }
+
+  renderRecipes(recipes) {
+    if (!DOM.recipesGrid) return;
+
+    if (recipes.length === 0) {
+      this.showEmptyState();
+      return;
+    }
+
+    this.hideEmptyState();
+    
+    DOM.recipesGrid.innerHTML = recipes.map(recipe => this.createRecipeCard(recipe)).join('');
+    
+    // Add event listeners to recipe cards
+    this.setupRecipeCardListeners();
+  }
+
+  createRecipeCard(recipe) {
+    const isFavorite = this.favorites.has(recipe.id);
+    
+    return `
+      <article class="recipe-card" data-recipe-id="${recipe.id}" role="gridcell">
+        <div class="recipe-card__image">
+          <img 
+            src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
+            alt="${recipe.title}"
+            loading="lazy"
+            onerror="this.src='${ImageService.getDefaultImage('recipe')}'"
+          >
+          <button 
+            class="recipe-card__favorite ${isFavorite ? 'recipe-card__favorite--active' : ''}"
+            aria-label="${isFavorite ? t('removedFromFavorites') : t('addedToFavorites')}"
+            data-action="toggle-favorite"
+          >
+            <span aria-hidden="true">${isFavorite ? '❤️' : '🤍'}</span>
+          </button>
+        </div>
+        
+        <div class="recipe-card__content">
+          <header class="recipe-card__header">
+            <h3 class="recipe-card__title">${recipe.title}</h3>
+            <div class="recipe-card__meta">
+              <span class="recipe-card__time">
+                <span aria-hidden="true">⏱️</span>
+                ${recipe.cookingTime} min
+              </span>
+              <span class="recipe-card__difficulty">${recipe.difficulty}</span>
+            </div>
+          </header>
+          
+          ${recipe.description ? `
+            <p class="recipe-card__description">${recipe.description}</p>
+          ` : ''}
+          
+          ${recipe.categories.length > 0 ? `
+            <div class="recipe-card__categories">
+              ${recipe.categories.map(cat => `
+                <span class="recipe-card__category">${cat}</span>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <footer class="recipe-card__actions">
+            <button 
+              class="btn btn--secondary btn--sm"
+              data-action="view"
+              aria-label="${t('view')} ${recipe.title}"
+            >
+              ${t('view')}
+            </button>
+            <button 
+              class="btn btn--outline btn--sm"
+              data-action="edit"
+              aria-label="${t('edit')} ${recipe.title}"
+            >
+              ${t('edit')}
+            </button>
+            <button 
+              class="btn btn--outline btn--sm"
+              data-action="delete"
+              aria-label="${t('delete')} ${recipe.title}"
+            >
+              ${t('delete')}
+            </button>
+          </footer>
+        </div>
+      </article>
+    `;
+  }
+
+  setupRecipeCardListeners() {
+    const cards = DOM.recipesGrid.querySelectorAll('.recipe-card');
+    
+    cards.forEach(card => {
+      const recipeId = card.dataset.recipeId;
+      const recipe = this.recipes.find(r => r.id === recipeId);
+      
+      if (!recipe) return;
+
+      // Action buttons
+      const viewBtn = card.querySelector('[data-action="view"]');
+      const editBtn = card.querySelector('[data-action="edit"]');
+      const deleteBtn = card.querySelector('[data-action="delete"]');
+      const favoriteBtn = card.querySelector('[data-action="toggle-favorite"]');
+
+      if (viewBtn) {
+        viewBtn.addEventListener('click', () => this.showRecipeDetails(recipe));
+      }
+
+      if (editBtn) {
+        editBtn.addEventListener('click', () => this.showRecipeForm(recipe));
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => this.deleteRecipe(recipe.id));
+      }
+
+      if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', () => this.toggleFavorite(recipe.id));
+      }
+    });
+  }
+
+  showEmptyState() {
+    if (DOM.emptyState) DOM.emptyState.removeAttribute('hidden');
+    if (DOM.noResults) DOM.noResults.setAttribute('hidden', '');
+    if (DOM.recipesGrid) DOM.recipesGrid.innerHTML = '';
+  }
+
+  hideEmptyState() {
+    if (DOM.emptyState) DOM.emptyState.setAttribute('hidden', '');
+    if (DOM.noResults) DOM.noResults.setAttribute('hidden', '');
+  }
+
+  updateStats() {
+    const totalStat = document.querySelector('[data-stat="total"]');
+    const favoritesStat = document.querySelector('[data-stat="favorites"]');
+    const categoriesStat = document.querySelector('[data-stat="categories"]');
+
+    if (totalStat) totalStat.textContent = this.recipes.length;
+    if (favoritesStat) favoritesStat.textContent = this.favorites.size;
+    if (categoriesStat) {
+      const uniqueCategories = new Set(this.recipes.flatMap(r => r.categories));
+      categoriesStat.textContent = uniqueCategories.size;
+    }
+  }
+
+  updateResultsCount(count) {
+    if (!DOM.searchResults) return;
+    
+    if (this.searchQuery) {
+      DOM.searchResults.textContent = `${count} resultado${count !== 1 ? 's' : ''} encontrado${count !== 1 ? 's' : ''}`;
+    } else {
+      DOM.searchResults.textContent = '';
+    }
+  }
+
+  showRecipeForm(recipe = null) {
+    if (!DOM.recipeFormModal) {
+      console.error('Recipe form modal not found');
+      return;
+    }
+
+    const isEdit = recipe !== null;
+    const modalTitle = document.getElementById('form-modal-title');
+    
+    if (modalTitle) {
+      modalTitle.textContent = isEdit ? `${t('edit')}: ${recipe.title}` : t('newRecipe');
+    }
+
+    // Reset and populate form
+    this.resetRecipeForm();
+    if (isEdit) {
+      this.populateRecipeForm(recipe);
+    }
+
+    // Setup form listeners
+    this.setupRecipeFormListeners(recipe);
+    
+    // Show modal
+    DOM.recipeFormModal.showModal();
+    
+    // Focus first input
+    const firstInput = DOM.recipeFormModal.querySelector('input[type="text"]');
+    if (firstInput) {
+      setTimeout(() => firstInput.focus(), 100);
+    }
+  }
+
+  resetRecipeForm() {
+    if (!DOM.recipeForm) return;
+    
+    DOM.recipeForm.reset();
+    
+    // Reset dynamic lists
+    this.resetDynamicList('ingredients-list');
+    this.resetDynamicList('steps-list');
+    
+    // Clear categories
+    const categoriesTags = document.getElementById('categories-tags');
+    if (categoriesTags) {
+      categoriesTags.innerHTML = '';
+    }
+
+    // Clear image preview
+    const imagePreview = document.getElementById('image-preview');
+    if (imagePreview) {
+      imagePreview.innerHTML = '';
+      imagePreview.setAttribute('hidden', '');
+    }
+  }
+
+  populateRecipeForm(recipe) {
+    // Basic fields
+    const nameInput = DOM.recipeForm.querySelector('#recipe-name');
+    const timeInput = DOM.recipeForm.querySelector('#recipe-time');
+    
+    if (nameInput) nameInput.value = recipe.title;
+    if (timeInput) timeInput.value = recipe.cookingTime;
+
+    // Populate ingredients
+    if (recipe.ingredients.length > 0) {
+      const ingredientsList = document.getElementById('ingredients-list');
+      if (ingredientsList) {
+        ingredientsList.innerHTML = '';
+        recipe.ingredients.forEach(ingredient => {
+          this.addDynamicListItem('ingredients-list', 'text', t('addIngredient'), ingredient);
+        });
+      }
+    }
+
+    // Populate steps
+    if (recipe.steps.length > 0) {
+      const stepsList = document.getElementById('steps-list');
+      if (stepsList) {
+        stepsList.innerHTML = '';
+        recipe.steps.forEach(step => {
+          this.addDynamicListItem('steps-list', 'textarea', t('addStep'), step);
+        });
+      }
+    }
+
+    // Populate categories
+    recipe.categories.forEach(category => {
+      this.addCategory(category);
+    });
+
+    // Show image if exists
+    if (recipe.imageUrl) {
+      this.showImagePreview(recipe.imageUrl);
+    }
+  }
+
+  resetDynamicList(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    
+    const isIngredients = listId.includes('ingredients');
+    const inputType = isIngredients ? 'text' : 'textarea';
+    const placeholder = isIngredients ? 'Ej: 2 tazas de harina' : 'Describe este paso...';
+    
+    list.innerHTML = `
+      <div class="dynamic-list__item">
+        <label for="${listId}-0" class="dynamic-list__label">
+          ${isIngredients ? 'Ingrediente 1' : 'Paso 1'}
+        </label>
+        ${inputType === 'textarea' ? `
+          <textarea 
+            id="${listId}-0"
+            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+            class="form-textarea dynamic-list__textarea"
+            rows="3"
+            placeholder="${placeholder}"
+            required
+          ></textarea>
+        ` : `
+          <input 
+            type="text"
+            id="${listId}-0"
+            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+            class="form-input dynamic-list__input"
+            placeholder="${placeholder}"
+            required
+          >
+        `}
+        <button 
+          type="button" 
+          class="btn btn--icon btn--remove-item"
+          aria-label="Eliminar ${isIngredients ? 'ingrediente' : 'paso'}"
+          disabled
+        >
+          <span aria-hidden="true">−</span>
+        </button>
+      </div>
+    `;
+  }
+
+  addDynamicListItem(listId, inputType = 'text', buttonText = '', value = '') {
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    const items = list.querySelectorAll('.dynamic-list__item');
+    const index = items.length;
+    const isIngredients = listId.includes('ingredients');
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'dynamic-list__item';
+    
+    const label = isIngredients ? `Ingrediente ${index + 1}` : `Paso ${index + 1}`;
+    const name = isIngredients ? 'ingredients[]' : 'steps[]';
+    const placeholder = isIngredients ? 'Ej: 2 tazas de harina' : 'Describe este paso...';
+    
+    itemDiv.innerHTML = `
+      <label for="${listId}-${index}" class="dynamic-list__label">
+        ${label}
+      </label>
+      ${inputType === 'textarea' ? `
+        <textarea 
+          id="${listId}-${index}"
+          name="${name}"
+          class="form-textarea dynamic-list__textarea"
+          rows="3"
+          placeholder="${placeholder}"
+          required
+        >${value}</textarea>
+      ` : `
+        <input 
+          type="text"
+          id="${listId}-${index}"
+          name="${name}"
+          class="form-input dynamic-list__input"
+          placeholder="${placeholder}"
+          value="${value}"
+          required
+        >
+      `}
+      <button 
+        type="button" 
+        class="btn btn--icon btn--remove-item"
+        aria-label="Eliminar ${isIngredients ? 'ingrediente' : 'paso'}"
+      >
+        <span aria-hidden="true">−</span>
+      </button>
+    `;
+
+    list.appendChild(itemDiv);
+
+    // Add remove functionality
+    const removeBtn = itemDiv.querySelector('.btn--remove-item');
+    removeBtn.addEventListener('click', () => {
+      itemDiv.remove();
+      this.updateDynamicListLabels(listId);
+    });
+
+    // Auto-search image for ingredients
+    if (isIngredients && !value) {
+      const input = itemDiv.querySelector('input');
+      if (input) {
+        input.addEventListener('blur', async (e) => {
+          const ingredient = e.target.value.trim();
+          if (ingredient.length > 2) {
+            await this.searchIngredientImage(ingredient);
+          }
+        });
+      }
+    }
+
+    this.updateDynamicListLabels(listId);
+  }
+
+  updateDynamicListLabels(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    const items = list.querySelectorAll('.dynamic-list__item');
+    const isIngredients = listId.includes('ingredients');
+    
+    items.forEach((item, index) => {
+      const label = item.querySelector('.dynamic-list__label');
+      const removeBtn = item.querySelector('.btn--remove-item');
+      
+      if (label) {
+        label.textContent = isIngredients ? `Ingrediente ${index + 1}` : `Paso ${index + 1}`;
+      }
+      
+      if (removeBtn) {
+        removeBtn.disabled = items.length === 1;
+      }
+    });
+  }
+
+  async searchIngredientImage(ingredient) {
+    try {
+      showToast('loading', `${t('searchingImage')} "${ingredient}"...`);
+      
+      const imageUrl = await ImageService.searchIngredientImage(ingredient);
+      
+      if (imageUrl) {
+        showToast('success', `${t('imageFound')} "${ingredient}"`);
+      }
+      
+      return imageUrl;
+    } catch (error) {
+      console.error('Error searching ingredient image:', error);
+      showToast('warning', `${t('imageNotFound')} "${ingredient}"`);
+      return null;
+    }
+  }
+
+  addCategory(categoryText) {
+    const categoriesTags = document.getElementById('categories-tags');
+    if (!categoriesTags || !categoryText.trim()) return;
+
+    const categoryTag = document.createElement('span');
+    categoryTag.className = 'category-tag';
+    categoryTag.innerHTML = `
+      <span class="category-tag__text">${categoryText}</span>
+      <button type="button" class="category-tag__remove" aria-label="Eliminar categoría ${categoryText}">
+        <span aria-hidden="true">×</span>
+      </button>
+    `;
+
+    // Add remove functionality
+    const removeBtn = categoryTag.querySelector('.category-tag__remove');
+    removeBtn.addEventListener('click', () => {
+      categoryTag.remove();
+    });
+
+    categoriesTags.appendChild(categoryTag);
+  }
+
+  setupRecipeFormListeners(editingRecipe = null) {
+    if (!DOM.recipeForm) return;
+
+    // Remove existing listeners
+    const newForm = DOM.recipeForm.cloneNode(true);
+    DOM.recipeForm.parentNode.replaceChild(newForm, DOM.recipeForm);
+    DOM.recipeForm = newForm;
+
+    // Recipe name input with auto-image search
+    const nameInput = DOM.recipeForm.querySelector('#recipe-name');
+    if (nameInput) {
+      nameInput.addEventListener('blur', async (e) => {
+        const recipeName = e.target.value.trim();
+        if (recipeName.length > 2 && !editingRecipe) {
+          await this.searchAndSetRecipeImage(recipeName);
+        }
+      });
+    }
+
+    // Add ingredient button
+    const addIngredientBtn = DOM.recipeForm.querySelector('.btn--add-ingredient');
+    if (addIngredientBtn) {
+      addIngredientBtn.addEventListener('click', () => {
+        this.addDynamicListItem('ingredients-list', 'text', t('addIngredient'));
+      });
+    }
+
+    // Add step button
+    const addStepBtn = DOM.recipeForm.querySelector('.btn--add-step');
+    if (addStepBtn) {
+      addStepBtn.addEventListener('click', () => {
+        this.addDynamicListItem('steps-list', 'textarea', t('addStep'));
+      });
+    }
+
+    // Categories input
+    const categoriesInput = DOM.recipeForm.querySelector('#category-input');
+    if (categoriesInput) {
+      categoriesInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const category = e.target.value.trim();
+          if (category) {
+            this.addCategory(category);
+            e.target.value = '';
+          }
+        }
+      });
+    }
+
+    // Form submission
+    DOM.recipeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleFormSubmit(e, editingRecipe);
+    });
+
+    // Cancel button
+    const cancelBtn = DOM.recipeForm.querySelector('.btn--cancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        DOM.recipeFormModal.close();
+      });
+    }
+
+    // Close button
+    const closeBtn = DOM.recipeFormModal.querySelector('.modal__close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        DOM.recipeFormModal.close();
+      });
+    }
+  }
+
+  async searchAndSetRecipeImage(recipeName) {
+    try {
+      showToast('loading', `${t('searchingImage')} "${recipeName}"...`);
+      
+      const imageUrl = await ImageService.searchRecipeImage(recipeName);
+      
+      if (imageUrl) {
+        this.showImagePreview(imageUrl);
+        showToast('success', `${t('imageFound')} "${recipeName}"`);
+      }
+      
+      return imageUrl;
+    } catch (error) {
+      console.error('Error fetching recipe image:', error);
+      showToast('warning', `${t('imageNotFound')} "${recipeName}"`);
+      return null;
+    }
+  }
+
+  showImagePreview(imageUrl) {
+    const imagePreview = document.getElementById('image-preview');
+    if (!imagePreview) return;
+
+    imagePreview.innerHTML = `
+      <div class="image-preview">
+        <img src="${imageUrl}" alt="Vista previa" class="image-preview__img">
+        <button type="button" class="image-preview__remove" aria-label="Eliminar imagen">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    `;
+
+    imagePreview.removeAttribute('hidden');
+
+    // Add remove functionality
+    const removeBtn = imagePreview.querySelector('.image-preview__remove');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        imagePreview.innerHTML = '';
+        imagePreview.setAttribute('hidden', '');
+      });
+    }
+  }
+
+  handleFormSubmit(event, editingRecipe = null) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const recipeData = this.extractRecipeData(formData);
+    
+    if (!this.validateRecipeData(recipeData)) {
+      return;
+    }
+
+    if (editingRecipe) {
+      this.updateRecipe(editingRecipe.id, recipeData);
+    } else {
+      this.createRecipe(recipeData);
+    }
+
+    DOM.recipeFormModal.close();
+  }
+
+  extractRecipeData(formData) {
+    const data = {
+      title: formData.get('name')?.trim() || '',
+      cookingTime: parseInt(formData.get('time')) || 0,
+      ingredients: formData.getAll('ingredients[]').filter(ing => ing.trim()),
+      steps: formData.getAll('steps[]').filter(step => step.trim()),
+      categories: []
+    };
+
+    // Extract categories from tags
+    const categoriesTags = document.querySelectorAll('.category-tag__text');
+    data.categories = Array.from(categoriesTags).map(tag => tag.textContent.trim());
+
+    // Get image URL from preview
+    const imagePreview = document.querySelector('.image-preview__img');
+    if (imagePreview) {
+      data.imageUrl = imagePreview.src;
+    }
+
+    return data;
+  }
+
+  validateRecipeData(data) {
+    if (!data.title) {
+      showToast('error', 'El título de la receta es obligatorio');
+      return false;
+    }
+
+    if (data.ingredients.length === 0) {
+      showToast('error', 'Debe agregar al menos un ingrediente');
+      return false;
+    }
+
+    if (data.steps.length === 0) {
+      showToast('error', 'Debe agregar al menos un paso de preparación');
+      return false;
+    }
+
+    return true;
+  }
+
+  createRecipe(data) {
+    const recipe = new Recipe(data);
+    this.recipes.push(recipe);
+    this.saveRecipes();
+    this.render();
+    
+    showToast('success', `Receta "${recipe.title}" creada exitosamente`);
+  }
+
+  updateRecipe(id, data) {
+    const index = this.recipes.findIndex(r => r.id === id);
+    if (index === -1) return;
+
+    const recipe = this.recipes[index];
+    Object.assign(recipe, data);
+    recipe.dateModified = new Date().toISOString();
+    
+    this.saveRecipes();
+    this.render();
+    
+    showToast('success', `Receta "${recipe.title}" actualizada exitosamente`);
+  }
+
+  deleteRecipe(id) {
+    const recipe = this.recipes.find(r => r.id === id);
+    if (!recipe) return;
+
+    if (confirm(`¿Estás seguro de que quieres eliminar la receta "${recipe.title}"?`)) {
+      this.recipes = this.recipes.filter(r => r.id !== id);
+      this.favorites.delete(id);
+      
+      this.saveRecipes();
+      this.saveFavorites();
+      this.render();
+      
+      showToast('success', `Receta "${recipe.title}" ${t('recipeDeleted')}`);
+    }
+  }
+
+  toggleFavorite(id) {
+    const recipe = this.recipes.find(r => r.id === id);
+    if (!recipe) return;
+
+    if (this.favorites.has(id)) {
+      this.favorites.delete(id);
+      showToast('info', `"${recipe.title}" ${t('removedFromFavorites')}`);
+    } else {
+      this.favorites.add(id);
+      showToast('success', `"${recipe.title}" ${t('addedToFavorites')}`);
+    }
+
+    this.saveFavorites();
+    this.render();
+  }
+
+  showRecipeDetails(recipe) {
+    // For now, just show a toast - could implement a full detail modal
+    showToast('info', `${t('view')}: ${recipe.title}`);
   }
 }
 
-// =============================================================================
-// APPLICATION INITIALIZATION
-// =============================================================================
+/**
+ * APPLICATION INITIALIZATION
+ */
 
 /**
  * Initialize application when DOM is ready
@@ -1324,10 +1633,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
     initializeDOM();
     
-    // Initialize PWA Manager
+    // Initialize managers
     PWAManager.getInstance();
-    
-    // Initialize Language Manager
+    ThemeManager.getInstance();
     LanguageManager.getInstance();
     
     // Initialize main application
@@ -1354,26 +1662,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Handle application errors globally
+ * Handle page visibility changes for better performance
  */
-window.addEventListener('error', (event) => {
-  console.error('❌ Global error:', event.error);
-  
-  showToast('error', 
-    'Ha ocurrido un error inesperado. La aplicación intentará recuperarse automáticamente.'
-  );
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && window.app?.initialized) {
+    // Refresh data when page becomes visible again
+    window.app.render();
+  }
 });
 
 /**
- * Handle unhandled promise rejections
+ * Global error handler
  */
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('❌ Unhandled promise rejection:', event.reason);
-  event.preventDefault();
-  
-  showToast('error', 
-    'Error de conexión. Verifica tu conexión a internet.'
-  );
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+  showToast('error', 'Ha ocurrido un error inesperado');
 });
 
-console.log('🎉 Cocina para Uno - Main script loaded successfully!');
+/**
+ * Unhandled promise rejection handler
+ */
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  showToast('error', 'Error de conexión o procesamiento');
+  event.preventDefault();
+});
