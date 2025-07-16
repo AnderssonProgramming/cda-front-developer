@@ -227,6 +227,8 @@ const DOM = {
  * Initialize DOM elements
  */
 function initializeDOM() {
+  console.log('🔧 Initializing DOM elements...');
+  
   DOM.loadingScreen = document.getElementById('loading-screen');
   DOM.searchInput = document.getElementById('search-input');
   DOM.searchClear = document.querySelector('.search__clear');
@@ -243,6 +245,11 @@ function initializeDOM() {
   DOM.languageToggle = document.querySelector('.language-toggle');
   DOM.languageMenu = document.querySelector('.language-menu');
   DOM.languageOptions = document.querySelectorAll('.language-option');
+  
+  console.log('🔧 DOM elements initialized:');
+  console.log('- themeToggle:', !!DOM.themeToggle);
+  console.log('- searchInput:', !!DOM.searchInput);
+  console.log('- languageToggle:', !!DOM.languageToggle);
 }
 
 /**
@@ -385,27 +392,17 @@ class ImageService {
   }
 
   static generateRealisticImageUrl(query, type, size) {
-    // Use a combination of real food image services
-    const services = [
-      'https://images.unsplash.com',
-      'https://source.unsplash.com'
-    ];
-    
-    // Clean query for URL
-    const cleanQuery = encodeURIComponent(query.toLowerCase().trim());
+    // Use picsum.photos which is more reliable than Unsplash
     const [width, height] = size.split('x');
     
-    // Generate different image patterns based on query
-    const patterns = [
-      `${services[1]}/${width}x${height}/?${cleanQuery},food`,
-      `${services[1]}/${width}x${height}/?${cleanQuery},cooking`,
-      `${services[1]}/featured/${width}x${height}/?${cleanQuery},recipe`,
-      `${services[1]}/${width}x${height}/?${cleanQuery},meal,delicious`
-    ];
+    // Generate a seed based on the query for consistent images
+    let seed = 0;
+    for (let i = 0; i < query.length; i++) {
+      seed += query.charCodeAt(i);
+    }
     
-    // Select pattern based on query length for consistency
-    const patternIndex = query.length % patterns.length;
-    return patterns[patternIndex];
+    // Use picsum.photos with seed for consistent images
+    return `https://picsum.photos/seed/${seed}/${width}/${height}`;
   }
 
   static generateImageId(query, type) {
@@ -742,8 +739,10 @@ class ThemeManager extends SingletonPattern {
   }
 
   updateThemeToggle() {
+    console.log('🔄 Updating theme toggle UI...');
+    
     if (!DOM.themeToggle) {
-      console.warn('Theme toggle button not found');
+      console.warn('❌ Cannot update theme toggle - button not found');
       return;
     }
 
@@ -752,12 +751,17 @@ class ThemeManager extends SingletonPattern {
     
     if (icon) {
       icon.textContent = isDark ? '☀️' : '🌙';
+      console.log(`🔄 Icon updated to: ${icon.textContent}`);
+    } else {
+      console.warn('❌ Theme toggle icon not found');
     }
     
     DOM.themeToggle.setAttribute('aria-pressed', isDark.toString());
     DOM.themeToggle.setAttribute('aria-label', 
       isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
     );
+    
+    console.log(`✅ Theme toggle updated for ${this.currentTheme} mode`);
   }
 
   setupThemeToggle() {
@@ -1507,6 +1511,14 @@ class OneCookingApp {
       });
     }
 
+    // File upload handling
+    const fileInput = DOM.recipeForm.querySelector('#recipe-image');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        this.handleFileUpload(e.target.files[0]);
+      });
+    }
+
     // Form submission
     DOM.recipeForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1549,89 +1561,52 @@ class OneCookingApp {
     }
   }
 
-  showImagePreview(imageUrl) {
-    const imagePreview = document.getElementById('image-preview');
-    if (!imagePreview) return;
+  handleFileUpload(file) {
+    if (!file) return;
 
-    imagePreview.innerHTML = `
-      <div class="image-preview">
-        <img src="${imageUrl}" alt="Vista previa" class="image-preview__img">
-        <button type="button" class="image-preview__remove" aria-label="Eliminar imagen">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-    `;
-
-    imagePreview.removeAttribute('hidden');
-
-    // Add remove functionality
-    const removeBtn = imagePreview.querySelector('.image-preview__remove');
-    if (removeBtn) {
-      removeBtn.addEventListener('click', () => {
-        imagePreview.innerHTML = '';
-        imagePreview.setAttribute('hidden', '');
-      });
-    }
-  }
-
-  handleFormSubmit(event, editingRecipe = null) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const recipeData = this.extractRecipeData(formData);
-    
-    if (!this.validateRecipeData(recipeData)) {
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    if (!validTypes.includes(file.type)) {
+      showToast('error', 'Formato de archivo no válido. Use JPG, PNG, WebP o AVIF.');
       return;
     }
 
-    if (editingRecipe) {
-      this.updateRecipe(editingRecipe.id, recipeData);
-    } else {
-      this.createRecipe(recipeData);
+    // Validate file size (5MB max)
+    if (file.size > APP_CONFIG.maxFileSize) {
+      showToast('error', 'El archivo es demasiado grande. Máximo 5MB.');
+      return;
     }
 
-    DOM.recipeFormModal.close();
-  }
-
-  extractRecipeData(formData) {
-    const data = {
-      title: formData.get('name')?.trim() || '',
-      cookingTime: parseInt(formData.get('time')) || 0,
-      ingredients: formData.getAll('ingredients[]').filter(ing => ing.trim()),
-      steps: formData.getAll('steps[]').filter(step => step.trim()),
-      categories: []
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target.result;
+      this.showImagePreview(imageUrl, file.name);
+      showToast('success', 'Imagen cargada correctamente');
     };
 
-    // Extract categories from tags
-    const categoriesTags = document.querySelectorAll('.category-tag__text');
-    data.categories = Array.from(categoriesTags).map(tag => tag.textContent.trim());
+    reader.onerror = () => {
+      showToast('error', 'Error al cargar la imagen');
+    };
 
-    // Get image URL from preview
-    const imagePreview = document.querySelector('.image-preview__img');
-    if (imagePreview) {
-      data.imageUrl = imagePreview.src;
-    }
-
-    return data;
+    reader.readAsDataURL(file);
   }
 
-  validateRecipeData(data) {
-    if (!data.title) {
-      showToast('error', 'El título de la receta es obligatorio');
-      return false;
-    }
+  showImagePreview(imageUrl, fileName) {
+    const preview = document.getElementById('image-preview');
+    if (!preview) return;
 
-    if (data.ingredients.length === 0) {
-      showToast('error', 'Debe agregar al menos un ingrediente');
-      return false;
-    }
-
-    if (data.steps.length === 0) {
-      showToast('error', 'Debe agregar al menos un paso de preparación');
-      return false;
-    }
-
-    return true;
+    preview.innerHTML = `
+      <div class="image-preview">
+        <img src="${imageUrl}" alt="Vista previa" class="image-preview__img">
+        <div class="image-preview__info">
+          <span class="image-preview__name">${fileName}</span>
+          <button type="button" class="image-preview__remove" onclick="this.closest('.image-preview').parentElement.innerHTML = ''; this.closest('.image-preview').parentElement.hidden = true;">
+            ✕
+          </button>
+        </div>
+      </div>
+    `;
+    preview.hidden = false;
   }
 
   createRecipe(data) {
@@ -1693,6 +1668,68 @@ class OneCookingApp {
     // For now, just show a toast - could implement a full detail modal
     showToast('info', `${t('view')}: ${recipe.title}`);
   }
+
+  handleFormSubmit(event, editingRecipe = null) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const recipeData = this.extractRecipeData(formData);
+    
+    if (!this.validateRecipeData(recipeData)) {
+      return;
+    }
+
+    if (editingRecipe) {
+      this.updateRecipe(editingRecipe.id, recipeData);
+    } else {
+      this.createRecipe(recipeData);
+    }
+
+    DOM.recipeFormModal.close();
+  }
+
+  extractRecipeData(formData) {
+    const data = {
+      title: formData.get('name')?.trim() || '',
+      cookingTime: parseInt(formData.get('time')) || 0,
+      ingredients: formData.getAll('ingredients[]').filter(ing => ing.trim()),
+      steps: formData.getAll('steps[]').filter(step => step.trim()),
+      categories: []
+    };
+
+    // Extract categories from tags
+    const categoriesTags = document.querySelectorAll('.category-tag__text');
+    data.categories = Array.from(categoriesTags).map(tag => tag.textContent.trim());
+
+    // Get image URL from preview (uploaded file) or auto-search
+    const imagePreview = document.querySelector('.image-preview__img');
+    if (imagePreview) {
+      data.imageUrl = imagePreview.src;
+    }
+
+    return data;
+  }
+
+  validateRecipeData(data) {
+    if (!data.title) {
+      showToast('error', 'El título de la receta es obligatorio');
+      return false;
+    }
+
+    if (data.ingredients.length === 0) {
+      showToast('error', 'Debe agregar al menos un ingrediente');
+      return false;
+    }
+
+    if (data.steps.length === 0) {
+      showToast('error', 'Debe agregar al menos un paso de preparación');
+      return false;
+    }
+
+    return true;
+  }
+
+  // ...existing code...
 }
 
 /**

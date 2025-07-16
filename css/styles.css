@@ -1940,7 +1940,7 @@ html[data-theme="dark"] .form-textarea:focus {
   position: absolute;
   right: var(--space-3);
   color: var(--color-primary);
-  font-weight: var(--font-bold);
+  font-weight: bold;
 }
 
 .language-option[aria-current="true"]:hover {
@@ -1998,4 +1998,45 @@ html[data-theme="dark"] .form-textarea:focus {
 
 [data-theme="dark"] .language-option[aria-current="true"]:hover {
   background: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   EMERGENCY FIXES - MUST BE LAST TO OVERRIDE EVERYTHING
+   ========================================================================== */
+
+/* FORCE DARK MODE TO WORK */
+body[data-theme="dark"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="light"] {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+}
+
+/* FORCE SEARCH INPUT TO WORK */
+body[data-theme="dark"] .search__input {
+  background-color: #404040 !important;
+  color: #ffffff !important;
+  border-color: #737373 !important;
+}
+
+body[data-theme="light"] .search__input {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border-color: #e5e5e5 !important;
+}
+
+/* FORCE TOAST MESSAGES TO BE VISIBLE */
+body[data-theme="light"] .toast {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #e5e5e5 !important;
+}
+
+body[data-theme="dark"] .toast {
+  background-color: #404040 !important;
+  color: #ffffff !important;
+  border: 1px solid #737373 !important;
 }
