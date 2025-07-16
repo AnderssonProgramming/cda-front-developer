@@ -1075,6 +1075,7 @@ class OneCookingApp {
     this.recipes = [];
     this.favorites = new Set();
     this.currentFilter = 'all';
+    this.categoryFilter = null;
     this.searchQuery = '';
     this.initialized = false;
   }
@@ -1089,6 +1090,7 @@ class OneCookingApp {
       
       // Setup UI
       this.setupEventListeners();
+      this.updateStats(); // ✅ Actualizar estadísticas en inicialización
       this.render();
       
       // Mark as initialized
@@ -1176,6 +1178,105 @@ class OneCookingApp {
         this.render();
       });
     });
+
+    // Categories dropdown
+    this.setupCategoriesDropdown();
+  }
+
+  setupCategoriesDropdown() {
+    const dropdownTrigger = document.querySelector('.dropdown__trigger');
+    const categoriesMenu = document.getElementById('categories-menu');
+    
+    if (!dropdownTrigger || !categoriesMenu) return;
+
+    // Toggle dropdown
+    dropdownTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isOpen = !categoriesMenu.hasAttribute('hidden');
+      
+      if (isOpen) {
+        categoriesMenu.setAttribute('hidden', '');
+        dropdownTrigger.setAttribute('aria-expanded', 'false');
+      } else {
+        this.populateCategoriesDropdown();
+        categoriesMenu.removeAttribute('hidden');
+        dropdownTrigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) {
+        categoriesMenu.setAttribute('hidden', '');
+        dropdownTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  populateCategoriesDropdown() {
+    const categoriesMenu = document.getElementById('categories-menu');
+    if (!categoriesMenu) return;
+
+    // Get unique categories from all recipes
+    const uniqueCategories = new Set();
+    this.recipes.forEach(recipe => {
+      recipe.categories.forEach(category => uniqueCategories.add(category));
+    });
+
+    // Clear existing items
+    categoriesMenu.innerHTML = '';
+
+    // Add "All Categories" option
+    const allItem = document.createElement('button');
+    allItem.className = 'dropdown__item';
+    allItem.textContent = t('allRecipes');
+    allItem.addEventListener('click', () => {
+      this.setActiveFilter('all');
+      this.render();
+      categoriesMenu.setAttribute('hidden', '');
+      document.querySelector('.dropdown__trigger').setAttribute('aria-expanded', 'false');
+    });
+    categoriesMenu.appendChild(allItem);
+
+    // Add each category
+    Array.from(uniqueCategories).sort().forEach(category => {
+      const categoryItem = document.createElement('button');
+      categoryItem.className = 'dropdown__item';
+      categoryItem.textContent = category;
+      categoryItem.addEventListener('click', () => {
+        this.filterByCategory(category);
+        categoriesMenu.setAttribute('hidden', '');
+        document.querySelector('.dropdown__trigger').setAttribute('aria-expanded', 'false');
+      });
+      categoriesMenu.appendChild(categoryItem);
+    });
+
+    // If no categories exist, show message
+    if (uniqueCategories.size === 0) {
+      const noCategories = document.createElement('div');
+      noCategories.className = 'dropdown__item dropdown__item--disabled';
+      noCategories.textContent = 'No hay categorías disponibles';
+      categoriesMenu.appendChild(noCategories);
+    }
+  }
+
+  filterByCategory(category) {
+    this.currentFilter = 'category';
+    this.categoryFilter = category;
+    
+    // Update filter button states
+    DOM.filterButtons.forEach(btn => {
+      btn.classList.remove('filter-btn--active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+
+    // Update dropdown trigger to show active category
+    const dropdownTrigger = document.querySelector('.dropdown__trigger .filter-btn__text');
+    if (dropdownTrigger) {
+      dropdownTrigger.textContent = category;
+    }
+
+    this.render();
   }
 
   debounce(func, wait) {
@@ -1202,6 +1303,13 @@ class OneCookingApp {
 
   setActiveFilter(filter) {
     this.currentFilter = filter;
+    this.categoryFilter = null; // Reset category filter
+    
+    // Reset dropdown trigger text
+    const dropdownTrigger = document.querySelector('.dropdown__trigger .filter-btn__text');
+    if (dropdownTrigger) {
+      dropdownTrigger.textContent = t('categories');
+    }
     
     DOM.filterButtons.forEach(btn => {
       const isActive = btn.dataset.filter === filter;
@@ -1227,6 +1335,10 @@ class OneCookingApp {
     // Apply type filter
     if (this.currentFilter === 'favorites') {
       filtered = filtered.filter(recipe => this.favorites.has(recipe.id));
+    } else if (this.currentFilter === 'category' && this.categoryFilter) {
+      filtered = filtered.filter(recipe => 
+        recipe.categories.includes(this.categoryFilter)
+      );
     }
 
     return filtered;
@@ -1487,8 +1599,9 @@ class OneCookingApp {
       const ingredientsList = document.getElementById('ingredients-list');
       if (ingredientsList) {
         ingredientsList.innerHTML = '';
-        recipe.ingredients.forEach(ingredient => {
-          this.addDynamicListItem('ingredients-list', 'text', t('addIngredient'), ingredient);
+        recipe.ingredients.forEach((ingredient, index) => {
+          const imageUrl = recipe.ingredientImages?.[index] || '';
+          this.addDynamicListItem('ingredients-list', 'text', t('addIngredient'), ingredient, imageUrl);
         });
       }
     }
@@ -1559,7 +1672,7 @@ class OneCookingApp {
     `;
   }
 
-  addDynamicListItem(listId, inputType = 'text', buttonText = '', value = '') {
+  addDynamicListItem(listId, inputType = 'text', buttonText = '', value = '', imageUrl = '') {
     const list = document.getElementById(listId);
     if (!list) return;
 
@@ -1578,26 +1691,46 @@ class OneCookingApp {
       <label for="${listId}-${index}" class="dynamic-list__label">
         ${label}
       </label>
-      ${inputType === 'textarea' ? `
-        <textarea 
-          id="${listId}-${index}"
-          name="${name}"
-          class="form-textarea dynamic-list__textarea"
-          rows="3"
-          placeholder="${placeholder}"
-          required
-        >${value}</textarea>
-      ` : `
-        <input 
-          type="text"
-          id="${listId}-${index}"
-          name="${name}"
-          class="form-input dynamic-list__input"
-          placeholder="${placeholder}"
-          value="${value}"
-          required
-        >
-      `}
+      <div class="dynamic-list__input-group">
+        ${inputType === 'textarea' ? `
+          <textarea 
+            id="${listId}-${index}"
+            name="${name}"
+            class="form-textarea dynamic-list__textarea"
+            rows="3"
+            placeholder="${placeholder}"
+            required
+          >${value}</textarea>
+        ` : `
+          <input 
+            type="text"
+            id="${listId}-${index}"
+            name="${name}"
+            class="form-input dynamic-list__input"
+            placeholder="${placeholder}"
+            value="${value}"
+            required
+          >
+        `}
+        
+        ${isIngredients ? `
+          <div class="ingredient-image-input">
+            <label for="${listId}-image-${index}" class="ingredient-image-label">
+              📷 Imagen del ingrediente (opcional)
+            </label>
+            <input 
+              type="url"
+              id="${listId}-image-${index}"
+              name="ingredient_images[]"
+              class="form-input ingredient-image-url"
+              placeholder="URL de la imagen del ingrediente"
+              value="${imageUrl || ''}"
+            >
+            <small class="form-help">O déjalo vacío para búsqueda automática</small>
+          </div>
+        ` : ''}
+      </div>
+      
       <button 
         type="button" 
         class="btn btn--icon btn--remove-item"
@@ -1618,12 +1751,27 @@ class OneCookingApp {
 
     // Auto-search image for ingredients
     if (isIngredients && !value) {
-      const input = itemDiv.querySelector('input');
-      if (input) {
+      const input = itemDiv.querySelector('.dynamic-list__input');
+      const imageInput = itemDiv.querySelector('.ingredient-image-url');
+      
+      if (input && imageInput) {
         input.addEventListener('blur', async (e) => {
           const ingredient = e.target.value.trim();
-          if (ingredient.length > 2) {
-            await this.searchIngredientImage(ingredient);
+          // Only search if there's an ingredient name and no manual image URL
+          if (ingredient.length > 2 && !imageInput.value.trim()) {
+            try {
+              showToast('info', `Buscando imagen para: ${ingredient}`);
+              const imageUrl = await ImageService.searchIngredientImage(ingredient);
+              if (imageUrl) {
+                imageInput.value = imageUrl;
+                showToast('success', `Imagen encontrada para: ${ingredient}`);
+              } else {
+                showToast('warning', `No se encontró imagen para: ${ingredient}`);
+              }
+            } catch (error) {
+              console.error('Error searching ingredient image:', error);
+              showToast('error', `Error buscando imagen para: ${ingredient}`);
+            }
           }
         });
       }
@@ -1845,6 +1993,7 @@ class OneCookingApp {
     const recipe = new Recipe(data);
     this.recipes.push(recipe);
     this.saveRecipes();
+    this.updateStats(); // ✅ Actualizar estadísticas
     this.render();
     
     showToast('success', `Receta "${recipe.title}" creada exitosamente`);
@@ -1859,6 +2008,7 @@ class OneCookingApp {
     recipe.dateModified = new Date().toISOString();
     
     this.saveRecipes();
+    this.updateStats(); // ✅ Actualizar estadísticas
     this.render();
     
     showToast('success', `Receta "${recipe.title}" actualizada exitosamente`);
@@ -1874,6 +2024,7 @@ class OneCookingApp {
       
       this.saveRecipes();
       this.saveFavorites();
+      this.updateStats(); // ✅ Actualizar estadísticas
       this.render();
       
       showToast('success', `Receta "${recipe.title}" ${t('recipeDeleted')}`);
@@ -1893,12 +2044,142 @@ class OneCookingApp {
     }
 
     this.saveFavorites();
+    this.updateStats(); // ✅ Actualizar estadísticas
     this.render();
   }
 
   showRecipeDetails(recipe) {
-    // For now, just show a toast - could implement a full detail modal
-    showToast('info', `${t('view')}: ${recipe.title}`);
+    console.log('🔍 Opening recipe details for:', recipe.title);
+    console.log('🔍 DOM.recipeModal exists:', !!DOM.recipeModal);
+    
+    if (!DOM.recipeModal) {
+      console.error('❌ Recipe modal not found - trying to find it again');
+      DOM.recipeModal = document.getElementById('recipe-modal');
+      if (!DOM.recipeModal) {
+        console.error('❌ Recipe modal still not found in DOM');
+        return;
+      }
+    }
+
+    // Populate modal content with recipe details
+    const modalContent = DOM.recipeModal.querySelector('.modal__content');
+    modalContent.innerHTML = `
+      <header class="modal__header">
+        <h2 class="modal__title">${recipe.title}</h2>
+        <button type="button" class="modal__close" aria-label="${t('close')}">
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+      
+      <div class="modal__body">
+        <div class="recipe-detail">
+          <div class="recipe-detail__image">
+            <img src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
+                 alt="${recipe.title}" 
+                 class="recipe-detail__img"
+                 loading="lazy">
+          </div>
+          
+          <div class="recipe-detail__meta">
+            <div class="recipe-detail__info">
+              <div class="info-item">
+                <span class="info-item__icon">⏱️</span>
+                <span class="info-item__label">${t('cookingTime')}:</span>
+                <span class="info-item__value">${recipe.cookingTime} min</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item__icon">🍽️</span>
+                <span class="info-item__label">${t('servings')}:</span>
+                <span class="info-item__value">${recipe.servings || 1}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item__icon">📊</span>
+                <span class="info-item__label">${t('difficulty')}:</span>
+                <span class="info-item__value">${recipe.difficulty || 'Fácil'}</span>
+              </div>
+            </div>
+            
+            ${recipe.categories.length > 0 ? `
+              <div class="recipe-detail__categories">
+                ${recipe.categories.map(cat => `
+                  <span class="category-tag category-tag--${cat.toLowerCase().replace(/\s+/g, '-')}">${cat}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="recipe-detail__content">
+            <section class="recipe-section">
+              <h3 class="recipe-section__title">
+                <span class="recipe-section__icon">🥕</span>
+                ${t('ingredients')}
+              </h3>
+              <ul class="ingredients-list">
+                ${recipe.ingredients.map((ingredient, index) => {
+                  const imageUrl = recipe.ingredientImages?.[index];
+                  return `
+                    <li class="ingredients-list__item ${imageUrl ? 'with-image' : ''}">
+                      ${imageUrl ? `<img src="${imageUrl}" alt="${ingredient}" class="ingredient-image" loading="lazy" onerror="this.style.display='none'">` : ''}
+                      <span class="ingredient-text">${ingredient}</span>
+                    </li>
+                  `;
+                }).join('')}
+              </ul>
+            </section>
+            
+            <section class="recipe-section">
+              <h3 class="recipe-section__title">
+                <span class="recipe-section__icon">👩‍🍳</span>
+                ${t('preparation')}
+              </h3>
+              <ol class="steps-list">
+                ${recipe.steps.map((step, index) => `
+                  <li class="steps-list__item">
+                    <span class="steps-list__number">${index + 1}</span>
+                    <span class="steps-list__text">${step}</span>
+                  </li>
+                `).join('')}
+              </ol>
+            </section>
+            
+            ${recipe.notes ? `
+              <section class="recipe-section">
+                <h3 class="recipe-section__title">
+                  <span class="recipe-section__icon">📝</span>
+                  ${t('notes')}
+                </h3>
+                <div class="recipe-notes">${recipe.notes}</div>
+              </section>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+      
+      <footer class="modal__footer">
+        <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">
+          ${t('close')}
+        </button>
+        <button type="button" class="btn btn--primary" onclick="app.showRecipeForm(${JSON.stringify(recipe).replace(/"/g, '&quot;')})">
+          ${t('edit')}
+        </button>
+      </footer>
+    `;
+
+    // Show modal
+    DOM.recipeModal.showModal();
+
+    // Add close button functionality
+    const closeBtn = DOM.recipeModal.querySelector('.modal__close');
+    closeBtn.addEventListener('click', () => {
+      DOM.recipeModal.close();
+    });
+
+    // Close on backdrop click
+    DOM.recipeModal.addEventListener('click', (e) => {
+      if (e.target === DOM.recipeModal) {
+        DOM.recipeModal.close();
+      }
+    });
   }
 
   handleFormSubmit(event, editingRecipe = null) {
@@ -1925,6 +2206,7 @@ class OneCookingApp {
       title: formData.get('name')?.trim() || '',
       cookingTime: parseInt(formData.get('time')) || 0,
       ingredients: formData.getAll('ingredients[]').filter(ing => ing.trim()),
+      ingredientImages: formData.getAll('ingredient_images[]').map(img => img.trim()).filter(img => img),
       steps: formData.getAll('steps[]').filter(step => step.trim()),
       categories: []
     };
@@ -1960,8 +2242,6 @@ class OneCookingApp {
 
     return true;
   }
-
-  // ...existing code...
 }
 
 /**
