@@ -1785,46 +1785,25 @@ class OneCookingApp {
         <label for="${listId}-0" class="dynamic-list__label">
           ${isIngredients ? 'Ingrediente 1' : 'Paso 1'}
         </label>
-        <div class="dynamic-list__input-group">
-          ${inputType === 'textarea' ? `
-            <textarea 
-              id="${listId}-0"
-              name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
-              class="form-textarea dynamic-list__textarea"
-              rows="3"
-              placeholder="${placeholder}"
-              required
-            ></textarea>
-          ` : `
-            <input 
-              type="text"
-              id="${listId}-0"
-              name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
-              class="form-input dynamic-list__input"
-              placeholder="${placeholder}"
-              required
-            >
-          `}
-          
-          ${isIngredients ? `
-            <div class="ingredient-image-input">
-              <label for="${listId}-image-0" class="ingredient-image-label">
-                📷 Imagen del ingrediente (opcional)
-              </label>
-              <input 
-                type="file"
-                id="${listId}-image-0"
-                name="ingredient_images[]"
-                class="form-input ingredient-image-file"
-                accept="image/*"
-                aria-describedby="${listId}-image-help-0"
-              >
-              <small id="${listId}-image-help-0" class="form-help">
-                JPG, PNG, WebP (máx. 2MB)
-              </small>
-            </div>
-          ` : ''}
-        </div>
+        ${inputType === 'textarea' ? `
+          <textarea 
+            id="${listId}-0"
+            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+            class="form-textarea dynamic-list__textarea"
+            rows="3"
+            placeholder="${placeholder}"
+            required
+          ></textarea>
+        ` : `
+          <input 
+            type="text"
+            id="${listId}-0"
+            name="${isIngredients ? 'ingredients[]' : 'steps[]'}"
+            class="form-input dynamic-list__input"
+            placeholder="${placeholder}"
+            required
+          >
+        `}
         <button 
           type="button" 
           class="btn btn--icon btn--remove-item"
@@ -1877,30 +1856,6 @@ class OneCookingApp {
             required
           >
         `}
-        
-        ${isIngredients ? `
-          <div class="ingredient-image-input">
-            <label for="${listId}-image-${index}" class="ingredient-image-label">
-              📷 Imagen del ingrediente (opcional)
-            </label>
-            <input 
-              type="file"
-              id="${listId}-image-${index}"
-              name="ingredient_images[]"
-              class="form-input ingredient-image-file"
-              accept="image/*"
-              aria-describedby="${listId}-image-help-${index}"
-            >
-            <small id="${listId}-image-help-${index}" class="form-help">
-              JPG, PNG, WebP (máx. 2MB)
-            </small>
-            ${imageUrl ? `
-              <div class="ingredient-image-preview">
-                <img src="${imageUrl}" alt="Preview" class="ingredient-image-thumb">
-              </div>
-            ` : ''}
-          </div>
-        ` : ''}
       </div>
       
       <button 
@@ -1921,10 +1876,9 @@ class OneCookingApp {
       this.updateDynamicListLabels(listId);
     });
 
-    // ✅ FIJO: Auto-búsqueda de imagen para ingredientes con file upload
-    if (isIngredients) {
+    // Auto-búsqueda de imagen para ingredientes (sin campo de archivo)
+    if (isIngredients && !value) {
       const input = itemDiv.querySelector('.dynamic-list__input');
-      const imageFileInput = itemDiv.querySelector('.ingredient-image-file');
       
       if (input) {
         let searchTimeout;
@@ -1932,96 +1886,23 @@ class OneCookingApp {
           clearTimeout(searchTimeout);
           const ingredient = input.value.trim();
           
-          if (ingredient.length > 2 && imageFileInput && !imageFileInput.files.length) {
+          if (ingredient.length > 2) {
             searchTimeout = setTimeout(async () => {
               try {
+                console.log(`🔍 Auto-searching image for ingredient: ${ingredient}`);
                 showToast('info', `Buscando imagen para: ${ingredient}`);
                 const imageUrl = await ImageService.searchIngredientImage(ingredient);
                 if (imageUrl) {
                   showToast('success', `Imagen encontrada para: ${ingredient}`);
-                  // Store the URL for potential use
+                  // Store for later use when saving recipe
                   input.dataset.autoImageUrl = imageUrl;
-                  
-                  // Show preview option
-                  const previewContainer = itemDiv.querySelector('.ingredient-image-preview') || document.createElement('div');
-                  previewContainer.className = 'ingredient-image-preview';
-                  previewContainer.innerHTML = `
-                    <img src="${imageUrl}" alt="Preview sugerido" class="ingredient-image-thumb">
-                    <button type="button" class="btn btn--small btn--secondary use-suggested-image">
-                      Usar imagen sugerida
-                    </button>
-                  `;
-                  
-                  const imageInputContainer = itemDiv.querySelector('.ingredient-image-input');
-                  if (imageInputContainer && !itemDiv.querySelector('.ingredient-image-preview')) {
-                    imageInputContainer.appendChild(previewContainer);
-                  }
-                  
-                  // Add event listener to use suggested image
-                  const useBtn = previewContainer.querySelector('.use-suggested-image');
-                  if (useBtn) {
-                    useBtn.addEventListener('click', async () => {
-                      try {
-                        // Create blob from URL and set as file input
-                        const response = await fetch(imageUrl);
-                        const blob = await response.blob();
-                        const file = new File([blob], `${ingredient.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
-                        
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        imageFileInput.files = dataTransfer.files;
-                        
-                        showToast('success', `Imagen aplicada para: ${ingredient}`);
-                        previewContainer.remove();
-                      } catch (error) {
-                        console.error('Error applying suggested image:', error);
-                        showToast('error', 'Error al aplicar imagen sugerida');
-                      }
-                    });
-                  }
                 } else {
                   showToast('warning', `No se encontró imagen para: ${ingredient}`);
                 }
               } catch (error) {
-                console.error('Error searching ingredient image:', error);
-                showToast('error', `Error buscando imagen para: ${ingredient}`);
+                console.error('Error in auto-search:', error);
               }
             }, 1500);
-          }
-        });
-      }
-    }
-
-    this.updateDynamicListLabels(listId);
-  }
-      
-      if (input) {
-        input.addEventListener('blur', async (e) => {
-          const ingredient = e.target.value.trim();
-          // Solo buscar si hay nombre de ingrediente y no hay archivo seleccionado
-          if (ingredient.length > 2 && imageFileInput && !imageFileInput.files.length) {
-            try {
-              showToast('info', `Buscando imagen para: ${ingredient}`);
-              const imageUrl = await ImageService.searchIngredientImage(ingredient);
-              if (imageUrl) {
-                // Crear un archivo a partir de la URL de Unsplash
-                const response = await fetch(imageUrl);
-                const blob = await response.blob();
-                const file = new File([blob], `${ingredient.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
-                
-                // Crear un DataTransfer para simular la selección de archivo
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                imageFileInput.files = dataTransfer.files;
-                
-                showToast('success', `Imagen encontrada para: ${ingredient}`);
-              } else {
-                showToast('warning', `No se encontró imagen para: ${ingredient}`);
-              }
-            } catch (error) {
-              console.error('Error searching ingredient image:', error);
-              showToast('error', `Error buscando imagen para: ${ingredient}`);
-            }
           }
         });
       }

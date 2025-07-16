@@ -2105,3 +2105,76 @@ html[data-theme="dark"] .form-textarea:focus {
 .recipe-modal-body::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
+
+/* 🔧 TEMPORARY FIXES for form styling - minimal changes */
+
+/* Fix ingredient image inputs to look better */
+.ingredient-image-input {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.ingredient-image-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.ingredient-image-file {
+  font-size: 0.875rem !important;
+  padding: 6px !important;
+}
+
+.ingredient-image-preview {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.ingredient-image-thumb {
+  max-width: 80px;
+  max-height: 80px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.use-suggested-image {
+  margin-top: 6px !important;
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+}
+
+/* Improve form section spacing */
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.dynamic-list__item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.dynamic-list__label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.dynamic-list__input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Better button styling for remove buttons */
+.btn--remove-item {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+}
