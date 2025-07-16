@@ -769,12 +769,26 @@ class UIController {
   }
 
   populateRecipeForm(recipe) {
-    // TODO: Implement form population for editing
+    if (!recipe || !DOM.recipeForm) return;
+    
+    // Populate basic fields
+    const nameInput = DOM.recipeForm.querySelector('[name="name"]');
+    const timeInput = DOM.recipeForm.querySelector('[name="time"]');
+    
+    if (nameInput) nameInput.value = recipe.title;
+    if (timeInput) timeInput.value = recipe.cookingTime;
+    
+    // Update modal title
+    const modalTitle = DOM.recipeFormModal?.querySelector('.modal__title');
+    if (modalTitle) modalTitle.textContent = `Editar Receta: ${recipe.title}`;
   }
 
   resetRecipeForm() {
     DOM.recipeForm?.reset();
-    // TODO: Reset dynamic lists and categories
+    
+    // Reset modal title
+    const modalTitle = DOM.recipeFormModal?.querySelector('.modal__title');
+    if (modalTitle) modalTitle.textContent = 'Nueva Receta';
   }
 
   handleRecipeSubmit(event) {
@@ -812,8 +826,11 @@ class UIController {
       cookingTime: time,
       ingredients,
       steps,
-      categories: [], // TODO: Extract from form
-      imageUrl: '', // TODO: Handle image upload
+      categories: ['general'], // Default category
+      imageUrl: '', // Will be implemented later
+      description: `Deliciosa receta de ${name}`,
+      difficulty: 'fácil',
+      servings: 1
     };
   }
 
@@ -890,9 +907,385 @@ class UIController {
             <button class="recipe-card__action" data-action="delete" aria-label="Eliminar receta">
               <span aria-hidden="true">🗑️</span>
             </button>
-            </div>
           </div>
-        </article>
-      `;
+        </div>
+      </article>
+    `;
+  }
+
+  attachRecipeCardListeners() {
+    const recipeCards = DOM.recipesGrid?.querySelectorAll('.recipe-card');
+    
+    recipeCards?.forEach(card => {
+      const recipeId = card.dataset.recipeId;
+      const recipe = this.appState.recipes.get(recipeId);
+      
+      if (!recipe) return;
+      
+      // Add click event for viewing recipe
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.recipe-card__action, .recipe-card__favorite')) {
+          this.showRecipeDetails(recipe);
+        }
+      });
+      
+      // Add action button events
+      const actions = card.querySelectorAll('.recipe-card__action');
+      actions.forEach(action => {
+        action.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const actionType = action.dataset.action;
+          this.handleRecipeAction(actionType, recipe);
+        });
+      });
+      
+      // Add favorite button event
+      const favoriteBtn = card.querySelector('.recipe-card__favorite');
+      favoriteBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleFavorite(recipe);
+      });
+    });
+  }
+
+  handleRecipeAction(actionType, recipe) {
+    switch (actionType) {
+      case 'view':
+        this.showRecipeDetails(recipe);
+        break;
+      case 'edit':
+        this.openRecipeForm(recipe);
+        break;
+      case 'share':
+        RecipeSharer.shareRecipe(recipe);
+        break;
+      case 'delete':
+        this.showDeleteConfirmation(recipe);
+        break;
+      default:
+        console.warn('Unknown recipe action:', actionType);
     }
   }
+
+  toggleFavorite(recipe) {
+    this.appState.toggleFavorite(recipe.id);
+    this.renderRecipes(this.appState.filteredRecipes);
+    
+    const message = recipe.isFavorite ? 
+      `✅ "${recipe.title}" agregada a favoritos` : 
+      `💔 "${recipe.title}" quitada de favoritos`;
+    
+    this.showToast(message, 'success');
+  }
+
+  showRecipeDetails(recipe) {
+    const modal = DOM.recipeModal;
+    if (!modal) return;
+    
+    modal.innerHTML = `
+      <div class="modal__backdrop" aria-hidden="true"></div>
+      <div class="modal__container">
+        <div class="modal__content">
+          <header class="modal__header">
+            <h2 class="modal__title">${recipe.title}</h2>
+            <button type="button" class="modal__close" aria-label="Cerrar modal">
+              <span aria-hidden="true">×</span>
+            </button>
+          </header>
+          
+          <div class="modal__body">
+            <div class="recipe-details">
+              ${recipe.imageUrl ? `
+                <div class="recipe-details__image">
+                  <img src="${recipe.imageUrl}" alt="${recipe.title}" loading="lazy">
+                </div>
+              ` : ''}
+              
+              <div class="recipe-details__meta">
+                <div class="recipe-meta">
+                  <span class="recipe-meta__item">
+                    <span class="recipe-meta__icon" aria-hidden="true">⏱️</span>
+                    <span>${recipe.cookingTime} min</span>
+                  </span>
+                  <span class="recipe-meta__item">
+                    <span class="recipe-meta__icon" aria-hidden="true">👨‍🍳</span>
+                    <span>${recipe.difficulty}</span>
+                  </span>
+                  <span class="recipe-meta__item">
+                    <span class="recipe-meta__icon" aria-hidden="true">🍽️</span>
+                    <span>${recipe.servings} porción${recipe.servings > 1 ? 'es' : ''}</span>
+                  </span>
+                </div>
+              </div>
+              
+              <div class="recipe-details__content">
+                <section class="recipe-section">
+                  <h3 class="recipe-section__title">Ingredientes</h3>
+                  <ul class="recipe-ingredients">
+                    ${recipe.ingredients.map(ingredient => `
+                      <li class="recipe-ingredient">${ingredient}</li>
+                    `).join('')}
+                  </ul>
+                </section>
+                
+                <section class="recipe-section">
+                  <h3 class="recipe-section__title">Preparación</h3>
+                  <ol class="recipe-steps">
+                    ${recipe.steps.map((step, index) => `
+                      <li class="recipe-step">
+                        <span class="recipe-step__number">${index + 1}</span>
+                        <span class="recipe-step__text">${step}</span>
+                      </li>
+                    `).join('')}
+                  </ol>
+                </section>
+                
+                ${recipe.notes ? `
+                  <section class="recipe-section">
+                    <h3 class="recipe-section__title">Notas</h3>
+                    <p class="recipe-notes">${recipe.notes}</p>
+                  </section>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+          
+          <footer class="modal__footer">
+            <button type="button" class="btn btn--secondary modal__close">
+              Cerrar
+            </button>
+            <button type="button" class="btn btn--primary" data-action="share">
+              <span class="btn__icon" aria-hidden="true">📤</span>
+              <span class="btn__text">Compartir</span>
+            </button>
+          </footer>
+        </div>
+      </div>
+    `;
+    
+    // Show modal
+    modal.showModal();
+    
+    // Add event listeners
+    this.addModalEventListeners(modal, recipe);
+  }
+
+  addModalEventListeners(modal, recipe) {
+    const closeButtons = modal.querySelectorAll('.modal__close');
+    const shareBtn = modal.querySelector('[data-action="share"]');
+    
+    // Close button events
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modal.close();
+      });
+    });
+    
+    // Share button event
+    shareBtn?.addEventListener('click', () => {
+      RecipeSharer.shareRecipe(recipe);
+    });
+  }
+
+  showDeleteConfirmation(recipe) {
+    const confirmMessage = `¿Estás seguro de que quieres eliminar la receta "${recipe.title}"? Esta acción no se puede deshacer.`;
+    
+    if (confirm(confirmMessage)) {
+      this.appState.deleteRecipe(recipe.id);
+      this.renderRecipes(this.appState.filteredRecipes);
+      this.showToast(`🗑️ Receta "${recipe.title}" eliminada correctamente`, 'success');
+    }
+  }
+
+  showToast(message, type = 'info') {
+    const toast = ToastFactory.create(type, message);
+    if (DOM.toastContainer) {
+      DOM.toastContainer.appendChild(toast);
+      
+      // Auto remove after duration
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, APP_CONFIG.toastDuration);
+    }
+  }
+
+  updateStats() {
+    const allRecipes = this.appState.recipes.getAll();
+    const favorites = allRecipes.filter(r => r.isFavorite);
+    const categories = [...new Set(allRecipes.flatMap(r => r.categories))];
+    
+    const stats = {
+      total: allRecipes.length,
+      favorites: favorites.length,
+      categories: categories.length
+    };
+    
+    // Update main stats
+    if (DOM.statsTotal) DOM.statsTotal.textContent = stats.total;
+    if (DOM.statsFavorites) DOM.statsFavorites.textContent = stats.favorites;
+    if (DOM.statsCategories) DOM.statsCategories.textContent = stats.categories;
+    
+    // Update filter counts
+    const allCountElement = document.querySelector('[data-count="all"]');
+    const favCountElement = document.querySelector('[data-count="favorites"]');
+    
+    if (allCountElement) allCountElement.textContent = stats.total;
+    if (favCountElement) favCountElement.textContent = stats.favorites;
+  }
+}
+
+/**
+ * Main Application Class
+ */
+class OneCookingApp {
+  constructor() {
+    this.appState = AppState.getInstance();
+    this.uiController = new UIController(this.appState);
+    this.pwaManager = PWAManager.getInstance();
+    this.initialized = false;
+  }
+
+  async init() {
+    try {
+      console.log('🔧 Initializing Cocina para Uno...');
+      
+      // Initialize PWA Manager first
+      this.pwaManager.initialize();
+      
+      // Setup initial theme
+      this.setupTheme();
+      
+      // Initialize UI
+      this.uiController.render();
+      
+      // Add some demo recipes if none exist
+      this.addDemoRecipes();
+      
+      // Mark as initialized
+      this.initialized = true;
+      
+      console.log('✅ Application initialized successfully');
+      
+    } catch (error) {
+      console.error('❌ Application initialization failed:', error);
+      throw error;
+    }
+  }
+
+  setupTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    this.appState.currentTheme = savedTheme;
+    
+    const themeToggle = DOM.themeToggle;
+    if (themeToggle) {
+      themeToggle.setAttribute('aria-pressed', savedTheme === 'dark');
+      themeToggle.setAttribute('aria-label', 
+        savedTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+      );
+      
+      const icon = themeToggle.querySelector('.theme-toggle__icon');
+      if (icon) {
+        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      }
+    }
+  }
+
+  addDemoRecipes() {
+    if (this.appState.recipes.getAll().length === 0) {
+      const demoRecipes = [
+        {
+          title: 'Arepa con Queso',
+          description: 'Deliciosa arepa tradicional con queso fundido',
+          ingredients: ['1 taza de harina de maíz', '1 taza de agua tibia', '1/2 cucharadita de sal', '100g de queso rallado'],
+          steps: ['Mezclar la harina con agua y sal', 'Formar una masa suave', 'Hacer bolitas y aplastar', 'Cocinar en plancha 5 min por lado', 'Abrir y rellenar con queso'],
+          cookingTime: 20,
+          categories: ['desayuno', 'rápida'],
+          difficulty: 'fácil',
+          servings: 1
+        },
+        {
+          title: 'Pasta con Tomate',
+          description: 'Pasta sencilla con salsa de tomate casera',
+          ingredients: ['100g de pasta', '2 tomates medianos', '1 diente de ajo', '2 cucharadas de aceite de oliva', 'Sal y pimienta'],
+          steps: ['Hervir agua con sal y cocinar la pasta', 'Pelar y picar los tomates', 'Freír el ajo en aceite', 'Agregar tomates y cocinar 10 min', 'Mezclar con la pasta'],
+          cookingTime: 25,
+          categories: ['almuerzo', 'vegetariana'],
+          difficulty: 'fácil',
+          servings: 1
+        }
+      ];
+
+      demoRecipes.forEach(recipeData => {
+        const recipe = new Recipe(recipeData);
+        this.appState.addRecipe(recipe);
+      });
+      
+      console.log('📚 Added demo recipes');
+    }
+  }
+}
+
+// =============================================================================
+// APPLICATION INITIALIZATION
+// =============================================================================
+
+/**
+ * Initialize application when DOM is ready
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🍲 Cocina para Uno - Starting application...');
+  
+  try {
+    // Initialize main application
+    const app = new OneCookingApp();
+    app.init();
+    
+    console.log('✅ Application initialized successfully');
+    
+    // Hide loading screen
+    const loadingScreen = DOM.loadingScreen;
+    if (loadingScreen) {
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 1000);
+    }
+    
+  } catch (error) {
+    console.error('❌ Application initialization failed:', error);
+    
+    // Show error message to user
+    document.body.innerHTML += `
+      <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                  background: #ff4444; color: white; padding: 20px; border-radius: 8px; z-index: 9999;">
+        <h3>Error de Inicialización</h3>
+        <p>Error al inicializar la aplicación. Por favor, recarga la página.</p>
+        <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px;">
+          Recargar
+        </button>
+      </div>
+    `;
+  }
+});
+
+/**
+ * Handle application errors globally
+ */
+window.addEventListener('error', (event) => {
+  console.error('❌ Global error:', event.error);
+});
+
+/**
+ * Handle unhandled promise rejections
+ */
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ Unhandled promise rejection:', event.reason);
+  event.preventDefault();
+});
+
+console.log('🎉 Cocina para Uno - Main script loaded successfully!');
