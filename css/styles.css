@@ -1254,68 +1254,89 @@ p {
 }
 
 .toast {
+  position: relative;
+  margin-bottom: 0.5rem;
+  padding: 1rem;
   background: var(--color-white);
-  border-left: var(--border-width-4) var(--border-style) var(--color-success);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-4);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
   transform: translateX(100%);
-  transition: var(--transition-base);
+  transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .toast--show {
+  opacity: 1;
   transform: translateX(0);
 }
 
+.toast--removing {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast--success {
+  border-left: 4px solid var(--color-success);
+  background: var(--color-success-50);
+}
+
 .toast--error {
-  border-left-color: var(--color-error);
+  border-left: 4px solid var(--color-error);
+  background: var(--color-error-50);
 }
 
 .toast--warning {
-  border-left-color: var(--color-warning);
+  border-left: 4px solid var(--color-warning);
+  background: var(--color-warning-50);
 }
 
 .toast--info {
-  border-left-color: var(--color-info);
-}
-
-.toast__icon {
-  font-size: var(--text-lg);
-  margin-top: var(--space-1);
+  border-left: 4px solid var(--color-info);
+  background: var(--color-info-50);
 }
 
 .toast__content {
-  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
-.toast__title {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--color-charcoal);
-  margin-bottom: var(--space-1);
-}
-
-.toast__message {
-  font-size: var(--text-sm);
-  color: var(--color-gray-700);
-  margin: 0;
-}
-
-.toast__close {
-  background: none;
-  border: none;
-  color: var(--color-gray-500);
-  cursor: pointer;
-  font-size: var(--text-lg);
-  padding: 0;
+.toast__icon {
+  flex-shrink: 0;
+  font-size: 1.125rem;
   line-height: 1;
 }
 
+.toast__message {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-gray-800);
+}
+
+.toast__close {
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: var(--color-gray-500);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
 .toast__close:hover {
+  background: var(--color-gray-100);
   color: var(--color-gray-700);
+}
+
+.toast__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 /* ==========================================================================
@@ -1537,31 +1558,197 @@ p {
   }
 }
 
-/* Print styles */
-@media print {
-  * {
-    background: transparent !important;
-    color: black !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-  
-  .header,
-  .nav,
-  .btn,
-  .modal,
-  .toast-container {
-    display: none !important;
-  }
-  
-  .main {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .recipe-card {
-    break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
+/* ==========================================================================
+   DARK MODE SPECIFIC FIXES
+   ========================================================================== */
+
+/* Fix search input text color in dark mode */
+[data-theme="dark"] .search__input {
+  color: var(--color-white);
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+}
+
+[data-theme="dark"] .search__input::placeholder {
+  color: var(--color-gray-400);
+}
+
+[data-theme="dark"] .search__input:focus {
+  background: var(--color-gray-50);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Fix form inputs in dark mode */
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea {
+  color: var(--color-white);
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+}
+
+[data-theme="dark"] .form-input::placeholder,
+[data-theme="dark"] .form-textarea::placeholder {
+  color: var(--color-gray-400);
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-textarea:focus {
+  background: var(--color-gray-50);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* ==========================================================================
+   LANGUAGE SELECTOR COMPONENT
+   ========================================================================== */
+
+.language-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.language-selector__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
+  color: var(--color-gray-900);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.language-selector__toggle:hover {
+  background: var(--color-gray-50);
+  border-color: var(--color-gray-400);
+}
+
+.language-selector__toggle:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.language-selector__flag {
+  font-size: 1rem;
+}
+
+.language-selector__code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.language-selector__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 160px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.5rem);
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.language-selector__dropdown--open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.language-selector__option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--color-gray-900);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-duration) var(--transition-timing);
+}
+
+.language-selector__option:hover {
+  background: var(--color-gray-50);
+}
+
+.language-selector__option:first-child {
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.language-selector__option:last-child {
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.language-selector__option--active {
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  font-weight: 600;
+}
+
+.language-selector__option--active:hover {
+  background: var(--color-primary-100);
+}
+
+.language-selector__name {
+  flex: 1;
+}
+
+/* Dark mode styles for language selector */
+[data-theme="dark"] .language-selector__toggle {
+  background: var(--color-gray-800);
+  border-color: var(--color-gray-600);
+  color: var(--color-white);
+}
+
+[data-theme="dark"] .language-selector__toggle:hover {
+  background: var(--color-gray-700);
+  border-color: var(--color-gray-500);
+}
+
+[data-theme="dark"] .language-selector__dropdown {
+  background: var(--color-gray-800);
+  border-color: var(--color-gray-600);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .language-selector__option {
+  color: var(--color-white);
+}
+
+[data-theme="dark"] .language-selector__option:hover {
+  background: var(--color-gray-700);
+}
+
+[data-theme="dark"] .language-selector__option--active {
+  background: var(--color-primary-900);
+  color: var(--color-primary-200);
+}
+
+[data-theme="dark"] .language-selector__option--active:hover {
+  background: var(--color-primary-800);
+}
+
+/* ==========================================================================
+   PWA INSTALL BUTTON
+   ========================================================================== */
+
+.pwa-install-btn {
+  margin-left: 0.5rem;
+}
+
+.pwa-install-btn .btn__icon {
+  font-size: 1.125rem;
 }
