@@ -416,9 +416,9 @@ function initializeDOM() {
   DOM.recipeFormModal = document.getElementById('recipe-form-modal');
   DOM.recipeForm = document.getElementById('recipe-form');
   DOM.toastContainer = document.getElementById('toast-container');
-  DOM.languageToggle = document.querySelector('.language-toggle');
-  DOM.languageMenu = document.querySelector('.language-menu');
-  DOM.languageOptions = document.querySelectorAll('.language-option');
+  DOM.languageToggle = document.querySelector('.language-selector__toggle');
+  DOM.languageMenu = document.querySelector('.language-selector__dropdown');
+  DOM.languageOptions = document.querySelectorAll('.language-selector__option');
   
   console.log('🔧 DOM elements initialized:');
   console.log('- themeToggle:', !!DOM.themeToggle);
@@ -745,11 +745,11 @@ class LanguageManager extends SingletonPattern {
     console.log(`🔄 Updating language display to: ${currentLangData.flag} ${currentLangData.name}`);
 
     // Update toggle button
-    const flagElement = DOM.languageToggle.querySelector('.language-toggle__flag');
-    const textElement = DOM.languageToggle.querySelector('.language-toggle__text');
+    const flagElement = DOM.languageToggle.querySelector('.language-selector__flag');
+    const textElement = DOM.languageToggle.querySelector('.language-selector__code');
     
     if (flagElement) flagElement.textContent = currentLangData.flag;
-    if (textElement) textElement.textContent = currentLangData.name;
+    if (textElement) textElement.textContent = currentLangData.code?.toUpperCase() || currentLangData.name.substring(0, 2).toUpperCase();
 
     // Update language options
     DOM.languageOptions.forEach(option => {
@@ -759,16 +759,16 @@ class LanguageManager extends SingletonPattern {
       option.setAttribute('aria-current', isActive);
       
       if (isActive) {
-        option.classList.add('language-option--active');
+        option.classList.add('language-selector__option--active');
       } else {
-        option.classList.remove('language-option--active');
+        option.classList.remove('language-selector__option--active');
       }
 
       // Update option display
       const langData = TRANSLATIONS[langCode];
       if (langData) {
-        const optionFlag = option.querySelector('.language-option__flag');
-        const optionText = option.querySelector('.language-option__text');
+        const optionFlag = option.querySelector('.language-selector__option-flag');
+        const optionText = option.querySelector('.language-selector__name');
         
         if (optionFlag) optionFlag.textContent = langData.flag;
         if (optionText) optionText.textContent = langData.name;
@@ -837,6 +837,7 @@ class LanguageManager extends SingletonPattern {
 
     // Hide dropdown
     DOM.languageMenu.setAttribute('hidden', '');
+    DOM.languageMenu.classList.remove('language-selector__dropdown--open');
     DOM.languageToggle.setAttribute('aria-expanded', 'false');
 
     // Trigger language change event
@@ -1465,71 +1466,109 @@ class OneCookingApp {
     
     return `
       <article class="recipe-card" data-recipe-id="${recipe.id}" role="gridcell">
-        <div class="recipe-card__image">
-          <img 
-            src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
-            alt="${recipe.title}"
-            loading="lazy"
-            onerror="this.src='${ImageService.getDefaultImage('recipe')}'"
-          >
-          <button 
-            class="recipe-card__favorite ${isFavorite ? 'recipe-card__favorite--active' : ''}"
-            aria-label="${isFavorite ? t('removedFromFavorites') : t('addedToFavorites')}"
-            data-action="toggle-favorite"
-            type="button"
-          >
-            <span aria-hidden="true">${isFavorite ? '❤️' : '🤍'}</span>
-          </button>
-        </div>
+        <header class="recipe-card__header">
+          <div class="recipe-card__image">
+            <img 
+              src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
+              alt="${recipe.title}"
+              class="recipe-card__img"
+              loading="lazy"
+              onerror="this.src='${ImageService.getDefaultImage('recipe')}'"
+            >
+            <button 
+              class="recipe-card__favorite ${isFavorite ? 'recipe-card__favorite--active' : ''}"
+              aria-label="${isFavorite ? t('removedFromFavorites') : t('addedToFavorites')}"
+              data-action="toggle-favorite"
+              title="${isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}"
+              type="button"
+            >
+              <span class="recipe-card__favorite-icon" aria-hidden="true">${isFavorite ? '❤️' : '🤍'}</span>
+            </button>
+          </div>
+        </header>
         
         <div class="recipe-card__content">
-          <header class="recipe-card__header">
+          <div class="recipe-card__info">
             <h3 class="recipe-card__title">${recipe.title}</h3>
-            <div class="recipe-card__meta">
-              <span class="recipe-card__time">
-                <span aria-hidden="true">⏱️</span>
-                ${recipe.cookingTime} min
-              </span>
-              <span class="recipe-card__difficulty">${recipe.difficulty}</span>
+            
+            <div class="recipe-card__stats">
+              <div class="recipe-card__stat">
+                <span class="recipe-card__stat-icon" aria-hidden="true">⏰</span>
+                <span class="recipe-card__stat-text">${recipe.cookingTime} min</span>
+              </div>
+              ${recipe.servings ? `
+                <div class="recipe-card__stat">
+                  <span class="recipe-card__stat-icon" aria-hidden="true">🍽️</span>
+                  <span class="recipe-card__stat-text">${recipe.servings} ${recipe.servings === 1 ? 'porción' : 'porciones'}</span>
+                </div>
+              ` : ''}
+              ${recipe.difficulty ? `
+                <div class="recipe-card__stat">
+                  <span class="recipe-card__stat-icon" aria-hidden="true">📊</span>
+                  <span class="recipe-card__stat-text">${recipe.difficulty}</span>
+                </div>
+              ` : ''}
             </div>
-          </header>
-          
-          ${recipe.description ? `
-            <p class="recipe-card__description">${recipe.description}</p>
-          ` : ''}
-          
-          ${recipe.categories.length > 0 ? `
-            <div class="recipe-card__categories">
-              ${recipe.categories.map(cat => `
-                <span class="recipe-card__category">${cat}</span>
-              `).join('')}
-            </div>
-          ` : ''}
+            
+            ${recipe.description ? `
+              <p class="recipe-card__description">${recipe.description}</p>
+            ` : ''}
+            
+            ${recipe.categories.length > 0 ? `
+              <div class="recipe-card__categories">
+                ${recipe.categories.map(cat => `
+                  <span class="category-tag category-tag--${cat.toLowerCase().replace(/\s+/g, '-')}">${cat}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
           
           <footer class="recipe-card__actions">
             <button 
-              class="btn btn--secondary btn--sm"
+              class="btn btn--secondary btn--small"
               data-action="view"
-              aria-label="${t('view')} ${recipe.title}"
+              aria-label="Ver receta ${recipe.title}"
+              title="Ver receta completa"
               type="button"
             >
-              ${t('view')}
+              <span class="btn__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </span>
+              <span class="btn__text">Ver</span>
             </button>
             <button 
-              class="btn btn--outline btn--sm"
+              class="btn btn--outline btn--small"
               data-action="edit"
-              aria-label="${t('edit')} ${recipe.title}"
+              aria-label="Editar receta ${recipe.title}"
+              title="Editar receta"
               type="button"
             >
-              ${t('edit')}
+              <span class="btn__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                  <path d="m15 5 4 4"/>
+                </svg>
+              </span>
+              <span class="btn__text">Editar</span>
             </button>
             <button 
-              class="btn btn--outline btn--sm"
+              class="btn btn--danger btn--small"
               data-action="delete"
-              aria-label="${t('delete')} ${recipe.title}"
+              aria-label="Eliminar receta ${recipe.title}"
+              title="Eliminar receta"
               type="button"
             >
-              ${t('delete')}
+              <span class="btn__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c0 1 1 2 2h4v2"/>
+                </svg>
+              </span>
+              <span class="btn__text">Eliminar</span>
             </button>
           </footer>
         </div>
@@ -2010,9 +2049,9 @@ class OneCookingApp {
     }
 
     // Form submission
-    DOM.recipeForm.addEventListener('submit', (e) => {
+    DOM.recipeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      this.handleFormSubmit(e, editingRecipe);
+      await this.handleFormSubmit(e, editingRecipe);
     });
 
     // Cancel button
@@ -2313,11 +2352,11 @@ class OneCookingApp {
     });
   }
 
-  handleFormSubmit(event, editingRecipe = null) {
+  async handleFormSubmit(event, editingRecipe = null) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
-    const recipeData = this.extractRecipeData(formData);
+    const recipeData = await this.extractRecipeData(formData);
     
     if (!this.validateRecipeData(recipeData)) {
       return;
@@ -2332,7 +2371,7 @@ class OneCookingApp {
     DOM.recipeFormModal.close();
   }
 
-  extractRecipeData(formData) {
+  async extractRecipeData(formData) {
     const data = {
       title: formData.get('name')?.trim() || '',
       cookingTime: parseInt(formData.get('time')) || 0,
@@ -2344,15 +2383,29 @@ class OneCookingApp {
       categories: []
     };
 
-    // Process ingredient images (files)
+    // Process ingredient images (files + auto-search)
     const ingredientImageFiles = formData.getAll('ingredient_images[]');
-    data.ingredientImages = ingredientImageFiles.map(file => {
+    const ingredients = formData.getAll('ingredients[]').filter(ing => ing.trim());
+    
+    data.ingredientImages = await Promise.all(ingredients.map(async (ingredient, index) => {
+      const file = ingredientImageFiles[index];
+      
       if (file && file.size > 0) {
-        // Convert file to data URL
+        // Use uploaded file
         return URL.createObjectURL(file);
+      } else if (ingredient.trim().length > 2) {
+        // Auto-search for ingredient image
+        try {
+          console.log(`🔍 Auto-searching image for ingredient: ${ingredient}`);
+          const imageUrl = await ImageService.searchIngredientImage(ingredient);
+          return imageUrl || '';
+        } catch (error) {
+          console.error(`Error searching image for ${ingredient}:`, error);
+          return '';
+        }
       }
       return '';
-    });
+    }));
 
     // Extract categories from tags
     const categoriesTags = document.querySelectorAll('.category-tag__text');
