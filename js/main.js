@@ -22,10 +22,12 @@ const APP_CONFIG = {
 };
 
 /**
- * Multi-language support - Translations
+ * Multi-language support - Translations with more languages
  */
 const TRANSLATIONS = {
   es: {
+    flag: '🇪🇸',
+    name: 'Español',
     appTitle: 'Cocina para Uno',
     appSubtitle: 'Tu recetario personal',
     searchPlaceholder: 'Buscar recetas, ingredientes...',
@@ -80,6 +82,8 @@ const TRANSLATIONS = {
     imageNotFound: 'No se pudo encontrar imagen automática'
   },
   en: {
+    flag: '🇺🇸',
+    name: 'English',
     appTitle: 'Cooking for One',
     appSubtitle: 'Your personal recipe book',
     searchPlaceholder: 'Search recipes, ingredients...',
@@ -134,6 +138,8 @@ const TRANSLATIONS = {
     imageNotFound: 'Could not find automatic image'
   },
   fr: {
+    flag: '🇫🇷',
+    name: 'Français',
     appTitle: 'Cuisine pour Un',
     appSubtitle: 'Votre livre de recettes personnel',
     searchPlaceholder: 'Rechercher recettes, ingrédients...',
@@ -186,6 +192,174 @@ const TRANSLATIONS = {
     searchingImage: 'Recherche d\'image automatique...',
     imageFound: 'Image trouvée automatiquement',
     imageNotFound: 'Impossible de trouver une image automatique'
+  },
+  de: {
+    flag: '🇩🇪',
+    name: 'Deutsch',
+    appTitle: 'Kochen für Eine Person',
+    appSubtitle: 'Ihr persönliches Rezeptbuch',
+    searchPlaceholder: 'Rezepte, Zutaten suchen...',
+    newRecipe: 'Neues Rezept',
+    allRecipes: 'Alle',
+    favorites: 'Favoriten',
+    categories: 'Kategorien',
+    recipes: 'Rezepte',
+    emptyStateTitle: 'Beginnen Sie Ihr kulinarisches Abenteuer!',
+    emptyStateDescription: 'Erstellen Sie Ihr erstes Rezept und organisieren Sie Ihre persönliche Rezeptsammlung',
+    addFirstRecipe: '+ Mein erstes Rezept hinzufügen',
+    noResultsTitle: 'Keine Rezepte gefunden',
+    noResultsDescription: 'Versuchen Sie andere Suchbegriffe oder fügen Sie ein neues Rezept hinzu',
+    clearSearch: 'Suche löschen',
+    view: 'Rezept ansehen',
+    edit: 'Rezept bearbeiten',
+    share: 'Rezept teilen',
+    delete: 'Rezept löschen',
+    close: 'Schließen',
+    ingredients: 'Zutaten',
+    preparation: 'Zubereitung',
+    notes: 'Notizen',
+    cookingTime: 'Kochzeit',
+    difficulty: 'Schwierigkeit',
+    servings: 'Portionen',
+    loading: 'Laden...',
+    error: 'Fehler',
+    success: 'Erfolg',
+    warning: 'Warnung',
+    info: 'Information',
+    recipeTitle: 'Rezept Titel',
+    recipeDescription: 'Beschreibung',
+    addIngredient: 'Zutat hinzufügen',
+    addStep: 'Schritt hinzufügen',
+    saveRecipe: 'Rezept speichern',
+    cancel: 'Abbrechen',
+    installApp: 'App installieren',
+    updateAvailable: 'Update verfügbar',
+    updateNow: 'Jetzt aktualisieren',
+    later: 'Später',
+    connectionRestored: 'Verbindung wiederhergestellt',
+    offlineMode: 'Offline-Modus aktiviert',
+    linkCopied: 'Link in die Zwischenablage kopiert',
+    addedToFavorites: 'zu Favoriten hinzugefügt',
+    removedFromFavorites: 'aus Favoriten entfernt',
+    recipeDeleted: 'erfolgreich gelöscht',
+    language: 'Sprache',
+    changeLanguage: 'Sprache ändern',
+    changed: 'geändert',
+    searchingImage: 'Automatisches Bild suchen...',
+    imageFound: 'Bild automatisch gefunden',
+    imageNotFound: 'Automatisches Bild nicht gefunden'
+  },
+  it: {
+    flag: '🇮🇹',
+    name: 'Italiano',
+    appTitle: 'Cucinare per Uno',
+    appSubtitle: 'Il tuo ricettario personale',
+    searchPlaceholder: 'Cerca ricette, ingredienti...',
+    newRecipe: 'Nuova Ricetta',
+    allRecipes: 'Tutte',
+    favorites: 'Preferite',
+    categories: 'Categorie',
+    recipes: 'Ricette',
+    emptyStateTitle: 'Inizia la tua avventura culinaria!',
+    emptyStateDescription: 'Crea la tua prima ricetta e inizia a organizzare la tua collezione personale',
+    addFirstRecipe: '+ Aggiungi la mia prima ricetta',
+    noResultsTitle: 'Nessuna ricetta trovata',
+    noResultsDescription: 'Prova altri termini di ricerca o aggiungi una nuova ricetta',
+    clearSearch: 'Cancella ricerca',
+    view: 'Visualizza ricetta',
+    edit: 'Modifica ricetta',
+    share: 'Condividi ricetta',
+    delete: 'Elimina ricetta',
+    close: 'Chiudi',
+    ingredients: 'Ingredienti',
+    preparation: 'Preparazione',
+    notes: 'Note',
+    cookingTime: 'Tempo di cottura',
+    difficulty: 'Difficoltà',
+    servings: 'Porzioni',
+    loading: 'Caricamento...',
+    error: 'Errore',
+    success: 'Successo',
+    warning: 'Avvertimento',
+    info: 'Informazione',
+    recipeTitle: 'Titolo ricetta',
+    recipeDescription: 'Descrizione',
+    addIngredient: 'Aggiungi ingrediente',
+    addStep: 'Aggiungi passaggio',
+    saveRecipe: 'Salva ricetta',
+    cancel: 'Annulla',
+    installApp: 'Installa App',
+    updateAvailable: 'Aggiornamento disponibile',
+    updateNow: 'Aggiorna ora',
+    later: 'Più tardi',
+    connectionRestored: 'Connessione ripristinata',
+    offlineMode: 'Modalità offline attivata',
+    linkCopied: 'Link copiato negli appunti',
+    addedToFavorites: 'aggiunta ai preferiti',
+    removedFromFavorites: 'rimossa dai preferiti',
+    recipeDeleted: 'eliminata con successo',
+    language: 'Lingua',
+    changeLanguage: 'Cambia lingua',
+    changed: 'cambiato',
+    searchingImage: 'Ricerca immagine automatica...',
+    imageFound: 'Immagine trovata automaticamente',
+    imageNotFound: 'Impossibile trovare immagine automatica'
+  },
+  pt: {
+    flag: '🇵🇹',
+    name: 'Português',
+    appTitle: 'Cozinhar para Um',
+    appSubtitle: 'Seu livro de receitas pessoal',
+    searchPlaceholder: 'Buscar receitas, ingredientes...',
+    newRecipe: 'Nova Receita',
+    allRecipes: 'Todas',
+    favorites: 'Favoritas',
+    categories: 'Categorias',
+    recipes: 'Receitas',
+    emptyStateTitle: 'Comece sua aventura culinária!',
+    emptyStateDescription: 'Crie sua primeira receita e comece a organizar sua coleção pessoal',
+    addFirstRecipe: '+ Adicionar minha primeira receita',
+    noResultsTitle: 'Nenhuma receita encontrada',
+    noResultsDescription: 'Tente outros termos de busca ou adicione uma nova receita',
+    clearSearch: 'Limpar busca',
+    view: 'Ver receita',
+    edit: 'Editar receita',
+    share: 'Compartilhar receita',
+    delete: 'Excluir receita',
+    close: 'Fechar',
+    ingredients: 'Ingredientes',
+    preparation: 'Preparo',
+    notes: 'Notas',
+    cookingTime: 'Tempo de cozimento',
+    difficulty: 'Dificuldade',
+    servings: 'Porções',
+    loading: 'Carregando...',
+    error: 'Erro',
+    success: 'Sucesso',
+    warning: 'Aviso',
+    info: 'Informação',
+    recipeTitle: 'Título da receita',
+    recipeDescription: 'Descrição',
+    addIngredient: 'Adicionar ingrediente',
+    addStep: 'Adicionar passo',
+    saveRecipe: 'Salvar receita',
+    cancel: 'Cancelar',
+    installApp: 'Instalar App',
+    updateAvailable: 'Atualização disponível',
+    updateNow: 'Atualizar agora',
+    later: 'Mais tarde',
+    connectionRestored: 'Conexão restaurada',
+    offlineMode: 'Modo offline ativado',
+    linkCopied: 'Link copiado para área de transferência',
+    addedToFavorites: 'adicionada aos favoritos',
+    removedFromFavorites: 'removida dos favoritos',
+    recipeDeleted: 'excluída com sucesso',
+    language: 'Idioma',
+    changeLanguage: 'Mudar idioma',
+    changed: 'alterado',
+    searchingImage: 'Buscando imagem automática...',
+    imageFound: 'Imagem encontrada automaticamente',
+    imageNotFound: 'Não foi possível encontrar imagem automática'
   }
 };
 
@@ -392,17 +566,37 @@ class ImageService {
   }
 
   static generateRealisticImageUrl(query, type, size) {
-    // Use picsum.photos which is more reliable than Unsplash
+    // First try food-specific sources, then fallback to generic
     const [width, height] = size.split('x');
     
-    // Generate a seed based on the query for consistent images
+    // Try food-specific image sources first
+    const foodSources = [
+      // Try Unsplash with food-specific keywords
+      `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)},food,cooking,recipe`,
+      `https://source.unsplash.com/featured/${width}x${height}/?${encodeURIComponent(query)},delicious,meal`,
+      `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)},cuisine,dish`,
+    ];
+    
+    // Generate a consistent seed based on query
     let seed = 0;
     for (let i = 0; i < query.length; i++) {
       seed += query.charCodeAt(i);
     }
     
-    // Use picsum.photos with seed for consistent images
-    return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+    // Select food source based on seed, with picsum as fallback
+    const sourceIndex = seed % (foodSources.length + 1);
+    
+    if (sourceIndex < foodSources.length) {
+      // Use food-specific source
+      const selectedSource = foodSources[sourceIndex];
+      console.log(`🍽️ Using food image source for "${query}": ${selectedSource}`);
+      return selectedSource;
+    } else {
+      // Fallback to picsum with seed for consistency
+      const fallbackUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
+      console.log(`🖼️ Using fallback image source for "${query}": ${fallbackUrl}`);
+      return fallbackUrl;
+    }
   }
 
   static generateImageId(query, type) {
@@ -447,11 +641,11 @@ class ImageService {
 class LanguageManager extends SingletonPattern {
   initialize() {
     this.currentLanguage = currentLanguage;
-    this.availableLanguages = [
-      { code: 'es', name: 'Español', flag: '🇪🇸' },
-      { code: 'en', name: 'English', flag: '🇺🇸' },
-      { code: 'fr', name: 'Français', flag: '🇫🇷' }
-    ];
+    this.availableLanguages = Object.keys(TRANSLATIONS).map(code => ({
+      code,
+      name: TRANSLATIONS[code].name,
+      flag: TRANSLATIONS[code].flag
+    }));
     
     this.setupLanguageSelector();
   }
@@ -470,25 +664,39 @@ class LanguageManager extends SingletonPattern {
   }
 
   updateLanguageDisplay() {
-    const currentLangData = this.availableLanguages.find(lang => lang.code === this.currentLanguage);
+    const currentLangData = TRANSLATIONS[this.currentLanguage];
     if (!currentLangData) return;
+
+    console.log(`🔄 Updating language display to: ${currentLangData.flag} ${currentLangData.name}`);
 
     // Update toggle button
     const flagElement = DOM.languageToggle.querySelector('.language-toggle__flag');
     const textElement = DOM.languageToggle.querySelector('.language-toggle__text');
     
     if (flagElement) flagElement.textContent = currentLangData.flag;
-    if (textElement) textElement.textContent = currentLangData.code.toUpperCase();
+    if (textElement) textElement.textContent = currentLangData.name;
 
-    // Update aria-current on options
+    // Update language options
     DOM.languageOptions.forEach(option => {
-      const isActive = option.getAttribute('data-lang') === this.currentLanguage;
+      const langCode = option.getAttribute('data-lang');
+      const isActive = langCode === this.currentLanguage;
+      
       option.setAttribute('aria-current', isActive);
       
       if (isActive) {
         option.classList.add('language-option--active');
       } else {
         option.classList.remove('language-option--active');
+      }
+
+      // Update option display
+      const langData = TRANSLATIONS[langCode];
+      if (langData) {
+        const optionFlag = option.querySelector('.language-option__flag');
+        const optionText = option.querySelector('.language-option__text');
+        
+        if (optionFlag) optionFlag.textContent = langData.flag;
+        if (optionText) optionText.textContent = langData.name;
       }
     });
   }
@@ -1063,6 +1271,7 @@ class OneCookingApp {
             class="recipe-card__favorite ${isFavorite ? 'recipe-card__favorite--active' : ''}"
             aria-label="${isFavorite ? t('removedFromFavorites') : t('addedToFavorites')}"
             data-action="toggle-favorite"
+            type="button"
           >
             <span aria-hidden="true">${isFavorite ? '❤️' : '🤍'}</span>
           </button>
@@ -1097,6 +1306,7 @@ class OneCookingApp {
               class="btn btn--secondary btn--sm"
               data-action="view"
               aria-label="${t('view')} ${recipe.title}"
+              type="button"
             >
               ${t('view')}
             </button>
@@ -1104,6 +1314,7 @@ class OneCookingApp {
               class="btn btn--outline btn--sm"
               data-action="edit"
               aria-label="${t('edit')} ${recipe.title}"
+              type="button"
             >
               ${t('edit')}
             </button>
@@ -1111,6 +1322,7 @@ class OneCookingApp {
               class="btn btn--outline btn--sm"
               data-action="delete"
               aria-label="${t('delete')} ${recipe.title}"
+              type="button"
             >
               ${t('delete')}
             </button>
@@ -1129,6 +1341,13 @@ class OneCookingApp {
       
       if (!recipe) return;
 
+      // Main card click (view recipe)
+      card.addEventListener('click', (e) => {
+        // Don't trigger if clicking on a button
+        if (e.target.closest('button')) return;
+        this.showRecipeDetails(recipe);
+      });
+
       // Action buttons
       const viewBtn = card.querySelector('[data-action="view"]');
       const editBtn = card.querySelector('[data-action="edit"]');
@@ -1136,19 +1355,32 @@ class OneCookingApp {
       const favoriteBtn = card.querySelector('[data-action="toggle-favorite"]');
 
       if (viewBtn) {
-        viewBtn.addEventListener('click', () => this.showRecipeDetails(recipe));
+        viewBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.showRecipeDetails(recipe);
+        });
       }
 
       if (editBtn) {
-        editBtn.addEventListener('click', () => this.showRecipeForm(recipe));
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.showRecipeForm(recipe);
+        });
       }
 
       if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => this.deleteRecipe(recipe.id));
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteRecipe(recipe.id);
+        });
       }
 
       if (favoriteBtn) {
-        favoriteBtn.addEventListener('click', () => this.toggleFavorite(recipe.id));
+        favoriteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          console.log(`🔄 Toggling favorite for recipe: ${recipe.title}`);
+          this.toggleFavorite(recipe.id);
+        });
       }
     });
   }
