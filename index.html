@@ -363,6 +363,47 @@
                         </div>
                         
                         <div class="form-group">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label for="recipe-servings" class="form-label">
+                                        Porciones *
+                                    </label>
+                                    <input 
+                                        type="number"
+                                        id="recipe-servings"
+                                        name="servings"
+                                        class="form-input"
+                                        required
+                                        min="1"
+                                        max="20"
+                                        value="1"
+                                        aria-describedby="recipe-servings-error"
+                                        placeholder="1"
+                                    >
+                                    <div class="form-error" id="recipe-servings-error" role="alert"></div>
+                                </div>
+                                
+                                <div class="form-col">
+                                    <label for="recipe-difficulty" class="form-label">
+                                        Dificultad *
+                                    </label>
+                                    <select 
+                                        id="recipe-difficulty"
+                                        name="difficulty"
+                                        class="form-input"
+                                        required
+                                        aria-describedby="recipe-difficulty-error"
+                                    >
+                                        <option value="Fácil">🟢 Fácil</option>
+                                        <option value="Intermedio">🟡 Intermedio</option>
+                                        <option value="Difícil">🔴 Difícil</option>
+                                    </select>
+                                    <div class="form-error" id="recipe-difficulty-error" role="alert"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="recipe-image" class="form-label">
                                 Imagen de la receta
                             </label>

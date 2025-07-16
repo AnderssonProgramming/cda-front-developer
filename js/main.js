@@ -624,14 +624,89 @@ class ImageService {
     return defaults[type] || defaults.recipe;
   }
 
+  static UNSPLASH_ACCESS_KEY = 'B-kNU-wr__MAHOQg45xN_NZy4tHPqSsguoMNUif8jvk';
+  static UNSPLASH_BASE_URL = 'https://api.unsplash.com/search/photos';
+
+  static async searchUnsplashImage(query, type = 'food') {
+    try {
+      const searchQuery = `${query} ${type}`;
+      const url = `${this.UNSPLASH_BASE_URL}?query=${encodeURIComponent(searchQuery)}&client_id=${this.UNSPLASH_ACCESS_KEY}&per_page=1&orientation=landscape`;
+      
+      console.log(`🔍 Searching Unsplash for: "${searchQuery}"`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Unsplash API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const photo = data.results[0];
+        const imageUrl = photo.urls.regular;
+        console.log(`✅ Unsplash image found: ${imageUrl}`);
+        return imageUrl;
+      } else {
+        console.log(`❌ No Unsplash images found for: "${searchQuery}"`);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Unsplash API error:', error);
+      return null;
+    }
+  }
+
   static async searchIngredientImage(ingredient) {
-    console.log(`🥕 Searching ingredient image: ${ingredient}`);
-    return await this.searchImage(ingredient, 'ingredient', '200x200');
+    try {
+      console.log(`🥕 Searching ingredient image: ${ingredient}`);
+      
+      // Check cache first
+      const cacheKey = `ingredient-${ingredient}`;
+      if (this.imageCache.has(cacheKey)) {
+        console.log(`✅ Found cached image for ingredient "${ingredient}"`);
+        return this.imageCache.get(cacheKey);
+      }
+      
+      // Try Unsplash first
+      const unsplashImage = await this.searchUnsplashImage(ingredient, 'ingredient food');
+      if (unsplashImage) {
+        this.imageCache.set(cacheKey, unsplashImage);
+        return unsplashImage;
+      }
+      
+      // Fallback to search method
+      return await this.searchImage(ingredient, 'ingredient', '200x200');
+    } catch (error) {
+      console.error('Error searching ingredient image:', error);
+      return this.getDefaultImage('ingredient');
+    }
   }
 
   static async searchRecipeImage(recipeName) {
-    console.log(`🍽️ Searching recipe image: ${recipeName}`);
-    return await this.searchImage(recipeName, 'recipe', '400x300');
+    try {
+      console.log(`🍽️ Searching recipe image: ${recipeName}`);
+      
+      // Check cache first
+      const cacheKey = `recipe-${recipeName}`;
+      if (this.imageCache.has(cacheKey)) {
+        console.log(`✅ Found cached image for recipe "${recipeName}"`);
+        return this.imageCache.get(cacheKey);
+      }
+      
+      // Try Unsplash first
+      const unsplashImage = await this.searchUnsplashImage(recipeName, 'food dish recipe');
+      if (unsplashImage) {
+        this.imageCache.set(cacheKey, unsplashImage);
+        return unsplashImage;
+      }
+      
+      // Fallback to search method
+      return await this.searchImage(recipeName, 'recipe', '400x300');
+    } catch (error) {
+      console.error('Error searching recipe image:', error);
+      return this.getDefaultImage('recipe');
+    }
   }
 }
 
@@ -1301,6 +1376,23 @@ class OneCookingApp {
     }
   }
 
+  updateFilterCounters() {
+    const totalRecipes = this.recipes.length;
+    const favoriteRecipes = this.recipes.filter(recipe => this.favorites.has(recipe.id)).length;
+    
+    // Update "Todas" counter
+    const allCounter = document.querySelector('[data-count="all"]');
+    if (allCounter) {
+      allCounter.textContent = totalRecipes;
+    }
+    
+    // Update "Favoritas" counter
+    const favoritesCounter = document.querySelector('[data-count="favorites"]');
+    if (favoritesCounter) {
+      favoritesCounter.textContent = favoriteRecipes;
+    }
+  }
+
   setActiveFilter(filter) {
     this.currentFilter = filter;
     this.categoryFilter = null; // Reset category filter
@@ -1349,6 +1441,7 @@ class OneCookingApp {
     this.renderRecipes(filteredRecipes);
     this.updateStats();
     this.updateResultsCount(filteredRecipes.length);
+    this.updateFilterCounters(); // Update filter button counters
   }
 
   renderRecipes(recipes) {
@@ -1509,6 +1602,7 @@ class OneCookingApp {
   }
 
   updateStats() {
+    // Actualizar estadísticas en la sección de estadísticas
     const totalStat = document.querySelector('[data-stat="total"]');
     const favoritesStat = document.querySelector('[data-stat="favorites"]');
     const categoriesStat = document.querySelector('[data-stat="categories"]');
@@ -1519,6 +1613,13 @@ class OneCookingApp {
       const uniqueCategories = new Set(this.recipes.flatMap(r => r.categories));
       categoriesStat.textContent = uniqueCategories.size;
     }
+
+    // ✅ FIJO: Actualizar contadores en los botones de filtro
+    const allCount = document.querySelector('[data-count="all"]');
+    const favoritesCount = document.querySelector('[data-count="favorites"]');
+    
+    if (allCount) allCount.textContent = this.recipes.length;
+    if (favoritesCount) favoritesCount.textContent = this.favorites.size;
   }
 
   updateResultsCount(count) {
@@ -1719,14 +1820,14 @@ class OneCookingApp {
               📷 Imagen del ingrediente (opcional)
             </label>
             <input 
-              type="url"
+              type="file"
               id="${listId}-image-${index}"
               name="ingredient_images[]"
-              class="form-input ingredient-image-url"
-              placeholder="URL de la imagen del ingrediente"
-              value="${imageUrl || ''}"
+              class="form-input ingredient-image-file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+              data-ingredient-index="${index}"
             >
-            <small class="form-help">O déjalo vacío para búsqueda automática</small>
+            <small class="form-help">O se buscará automáticamente al guardar</small>
           </div>
         ` : ''}
       </div>
@@ -1749,21 +1850,30 @@ class OneCookingApp {
       this.updateDynamicListLabels(listId);
     });
 
-    // Auto-search image for ingredients
+    // ✅ FIJO: Auto-búsqueda de imagen para ingredientes con file upload
     if (isIngredients && !value) {
       const input = itemDiv.querySelector('.dynamic-list__input');
-      const imageInput = itemDiv.querySelector('.ingredient-image-url');
+      const imageFileInput = itemDiv.querySelector('.ingredient-image-file');
       
-      if (input && imageInput) {
+      if (input) {
         input.addEventListener('blur', async (e) => {
           const ingredient = e.target.value.trim();
-          // Only search if there's an ingredient name and no manual image URL
-          if (ingredient.length > 2 && !imageInput.value.trim()) {
+          // Solo buscar si hay nombre de ingrediente y no hay archivo seleccionado
+          if (ingredient.length > 2 && imageFileInput && !imageFileInput.files.length) {
             try {
               showToast('info', `Buscando imagen para: ${ingredient}`);
               const imageUrl = await ImageService.searchIngredientImage(ingredient);
               if (imageUrl) {
-                imageInput.value = imageUrl;
+                // Crear un archivo a partir de la URL de Unsplash
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const file = new File([blob], `${ingredient.replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' });
+                
+                // Crear un DataTransfer para simular la selección de archivo
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                imageFileInput.files = dataTransfer.files;
+                
                 showToast('success', `Imagen encontrada para: ${ingredient}`);
               } else {
                 showToast('warning', `No se encontró imagen para: ${ingredient}`);
@@ -2065,7 +2175,14 @@ class OneCookingApp {
     const modalContent = DOM.recipeModal.querySelector('.modal__content');
     modalContent.innerHTML = `
       <header class="modal__header">
-        <h2 class="modal__title">${recipe.title}</h2>
+        <div class="modal__header-content">
+          <h2 class="modal__title">${recipe.title}</h2>
+          <div class="recipe-badges">
+            ${recipe.categories.map(cat => `
+              <span class="category-badge category-badge--${cat.toLowerCase().replace(/\s+/g, '-')}">${cat}</span>
+            `).join('')}
+          </div>
+        </div>
         <button type="button" class="modal__close" aria-label="${t('close')}">
           <span aria-hidden="true">×</span>
         </button>
@@ -2073,82 +2190,92 @@ class OneCookingApp {
       
       <div class="modal__body">
         <div class="recipe-detail">
-          <div class="recipe-detail__image">
-            <img src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
-                 alt="${recipe.title}" 
-                 class="recipe-detail__img"
-                 loading="lazy">
-          </div>
-          
-          <div class="recipe-detail__meta">
-            <div class="recipe-detail__info">
-              <div class="info-item">
-                <span class="info-item__icon">⏱️</span>
-                <span class="info-item__label">${t('cookingTime')}:</span>
-                <span class="info-item__value">${recipe.cookingTime} min</span>
-              </div>
-              <div class="info-item">
-                <span class="info-item__icon">🍽️</span>
-                <span class="info-item__label">${t('servings')}:</span>
-                <span class="info-item__value">${recipe.servings || 1}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-item__icon">📊</span>
-                <span class="info-item__label">${t('difficulty')}:</span>
-                <span class="info-item__value">${recipe.difficulty || 'Fácil'}</span>
-              </div>
+          <div class="recipe-hero">
+            <div class="recipe-hero__image">
+              <img src="${recipe.imageUrl || ImageService.getDefaultImage('recipe')}" 
+                   alt="${recipe.title}" 
+                   class="recipe-hero__img"
+                   loading="lazy">
             </div>
             
-            ${recipe.categories.length > 0 ? `
-              <div class="recipe-detail__categories">
-                ${recipe.categories.map(cat => `
-                  <span class="category-tag category-tag--${cat.toLowerCase().replace(/\s+/g, '-')}">${cat}</span>
-                `).join('')}
+            <div class="recipe-hero__info">
+              <div class="recipe-stats">
+                <div class="recipe-stat">
+                  <div class="recipe-stat__icon">⏱️</div>
+                  <div class="recipe-stat__content">
+                    <span class="recipe-stat__value">${recipe.cookingTime}</span>
+                    <span class="recipe-stat__label">minutos</span>
+                  </div>
+                </div>
+                <div class="recipe-stat">
+                  <div class="recipe-stat__icon">🍽️</div>
+                  <div class="recipe-stat__content">
+                    <span class="recipe-stat__value">${recipe.servings || 1}</span>
+                    <span class="recipe-stat__label">porciones</span>
+                  </div>
+                </div>
+                <div class="recipe-stat">
+                  <div class="recipe-stat__icon">📊</div>
+                  <div class="recipe-stat__content">
+                    <span class="recipe-stat__value">${recipe.difficulty || 'Fácil'}</span>
+                    <span class="recipe-stat__label">dificultad</span>
+                  </div>
+                </div>
               </div>
-            ` : ''}
+            </div>
           </div>
           
-          <div class="recipe-detail__content">
+          <div class="recipe-content">
             <section class="recipe-section">
               <h3 class="recipe-section__title">
                 <span class="recipe-section__icon">🥕</span>
-                ${t('ingredients')}
+                <span class="recipe-section__text">${t('ingredients')}</span>
               </h3>
-              <ul class="ingredients-list">
+              <div class="ingredients-grid">
                 ${recipe.ingredients.map((ingredient, index) => {
                   const imageUrl = recipe.ingredientImages?.[index];
                   return `
-                    <li class="ingredients-list__item ${imageUrl ? 'with-image' : ''}">
-                      ${imageUrl ? `<img src="${imageUrl}" alt="${ingredient}" class="ingredient-image" loading="lazy" onerror="this.style.display='none'">` : ''}
-                      <span class="ingredient-text">${ingredient}</span>
-                    </li>
+                    <div class="ingredient-card ${imageUrl ? 'ingredient-card--with-image' : ''}">
+                      ${imageUrl ? `
+                        <div class="ingredient-card__image">
+                          <img src="${imageUrl}" alt="${ingredient}" class="ingredient-image" loading="lazy" onerror="this.parentElement.style.display='none'">
+                        </div>
+                      ` : ''}
+                      <div class="ingredient-card__content">
+                        <span class="ingredient-card__text">${ingredient}</span>
+                      </div>
+                    </div>
                   `;
                 }).join('')}
-              </ul>
+              </div>
             </section>
             
             <section class="recipe-section">
               <h3 class="recipe-section__title">
                 <span class="recipe-section__icon">👩‍🍳</span>
-                ${t('preparation')}
+                <span class="recipe-section__text">${t('preparation')}</span>
               </h3>
-              <ol class="steps-list">
+              <div class="steps-timeline">
                 ${recipe.steps.map((step, index) => `
-                  <li class="steps-list__item">
-                    <span class="steps-list__number">${index + 1}</span>
-                    <span class="steps-list__text">${step}</span>
-                  </li>
+                  <div class="step-card">
+                    <div class="step-card__number">${index + 1}</div>
+                    <div class="step-card__content">
+                      <p class="step-card__text">${step}</p>
+                    </div>
+                  </div>
                 `).join('')}
-              </ol>
+              </div>
             </section>
             
             ${recipe.notes ? `
               <section class="recipe-section">
                 <h3 class="recipe-section__title">
                   <span class="recipe-section__icon">📝</span>
-                  ${t('notes')}
+                  <span class="recipe-section__text">${t('notes')}</span>
                 </h3>
-                <div class="recipe-notes">${recipe.notes}</div>
+                <div class="recipe-notes">
+                  <p>${recipe.notes}</p>
+                </div>
               </section>
             ` : ''}
           </div>
@@ -2156,12 +2283,16 @@ class OneCookingApp {
       </div>
       
       <footer class="modal__footer">
-        <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">
-          ${t('close')}
-        </button>
-        <button type="button" class="btn btn--primary" onclick="app.showRecipeForm(${JSON.stringify(recipe).replace(/"/g, '&quot;')})">
-          ${t('edit')}
-        </button>
+        <div class="modal__footer-actions">
+          <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">
+            <span class="btn__icon">←</span>
+            ${t('close')}
+          </button>
+          <button type="button" class="btn btn--primary" onclick="app.showRecipeForm(${JSON.stringify(recipe).replace(/"/g, '&quot;')})">
+            <span class="btn__icon">✏️</span>
+            ${t('edit')}
+          </button>
+        </div>
       </footer>
     `;
 
@@ -2205,11 +2336,23 @@ class OneCookingApp {
     const data = {
       title: formData.get('name')?.trim() || '',
       cookingTime: parseInt(formData.get('time')) || 0,
+      servings: parseInt(formData.get('servings')) || 1,
+      difficulty: formData.get('difficulty') || 'Fácil',
       ingredients: formData.getAll('ingredients[]').filter(ing => ing.trim()),
-      ingredientImages: formData.getAll('ingredient_images[]').map(img => img.trim()).filter(img => img),
+      ingredientImages: [],
       steps: formData.getAll('steps[]').filter(step => step.trim()),
       categories: []
     };
+
+    // Process ingredient images (files)
+    const ingredientImageFiles = formData.getAll('ingredient_images[]');
+    data.ingredientImages = ingredientImageFiles.map(file => {
+      if (file && file.size > 0) {
+        // Convert file to data URL
+        return URL.createObjectURL(file);
+      }
+      return '';
+    });
 
     // Extract categories from tags
     const categoriesTags = document.querySelectorAll('.category-tag__text');
