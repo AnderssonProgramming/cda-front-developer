@@ -1,873 +1,823 @@
 /**
- * COCINA PARA UNO - PATTERNS MODULE
+ * ============================================
+ * 🍲 COCINA PARA UNO - DESIGN PATTERNS
  * JavaScript Design Patterns implementation
- * Author: CDA Front Developer
- * Date: 2024
+ * ============================================
  */
 
 /**
- * SINGLETON PATTERN
- * Ensures only one instance of a class exists
- * Used for: Application state management, configuration, logging
+ * 1. SINGLETON PATTERN - Gestor de Recetas
+ * Garantiza una única instancia del gestor de recetas
  */
-export class SingletonPattern {
-  constructor() {
-    // Check if an instance already exists
-    if (this.constructor.instance) {
-      return this.constructor.instance;
-    }
+const GestorRecetas = (function() {
+    let instancia;
     
-    // Store the instance
-    this.constructor.instance = this;
-    
-    // Initialize the instance
-    this.initialize();
-    
-    return this;
-  }
-
-  /**
-   * Get the singleton instance
-   */
-  static getInstance() {
-    if (!this.instance) {
-      this.instance = new this();
-    }
-    return this.instance;
-  }
-
-  /**
-   * Initialize method to be overridden by subclasses
-   */
-  initialize() {
-    // Override in subclasses
-  }
-
-  /**
-   * Reset the singleton instance (useful for testing)
-   */
-  static resetInstance() {
-    this.instance = null;
-  }
-}
-
-/**
- * OBSERVER PATTERN
- * Allows objects to be notified of changes in other objects
- * Used for: Event handling, state changes, data updates
- */
-export class ObserverPattern {
-  constructor() {
-    this.observers = new Map();
-  }
-
-  /**
-   * Subscribe to an event
-   */
-  subscribe(eventType, callback) {
-    if (!this.observers.has(eventType)) {
-      this.observers.set(eventType, []);
-    }
-    
-    const observers = this.observers.get(eventType);
-    observers.push(callback);
-    
-    // Return unsubscribe function
-    return () => this.unsubscribe(eventType, callback);
-  }
-
-  /**
-   * Unsubscribe from an event
-   */
-  unsubscribe(eventType, callback) {
-    if (!this.observers.has(eventType)) {
-      return false;
-    }
-    
-    const observers = this.observers.get(eventType);
-    const index = observers.indexOf(callback);
-    
-    if (index > -1) {
-      observers.splice(index, 1);
-      return true;
-    }
-    
-    return false;
-  }
-
-  /**
-   * Notify all observers of an event
-   */
-  notifyObservers(eventType, data = null) {
-    if (!this.observers.has(eventType)) {
-      return;
-    }
-    
-    const observers = this.observers.get(eventType);
-    observers.forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(`Error in observer callback for ${eventType}:`, error);
-      }
-    });
-  }
-
-  /**
-   * Get all event types
-   */
-  getEventTypes() {
-    return Array.from(this.observers.keys());
-  }
-
-  /**
-   * Get observer count for an event type
-   */
-  getObserverCount(eventType) {
-    return this.observers.has(eventType) ? this.observers.get(eventType).length : 0;
-  }
-
-  /**
-   * Clear all observers for an event type
-   */
-  clearObservers(eventType) {
-    if (eventType) {
-      this.observers.delete(eventType);
-    } else {
-      this.observers.clear();
-    }
-  }
-}
-
-/**
- * FACTORY PATTERN
- * Creates objects without specifying their exact class
- * Used for: Creating different types of components, elements, or instances
- */
-export class FactoryPattern {
-  constructor() {
-    this.creators = new Map();
-    this.registerDefaultCreators();
-  }
-
-  /**
-   * Register default creators
-   */
-  registerDefaultCreators() {
-    // Toast notification creator
-    this.register('toast', (options) => {
-      return this.createToastElement(options);
-    });
-
-    // Modal creator
-    this.register('modal', (options) => {
-      return this.createModalElement(options);
-    });
-
-    // Recipe card creator
-    this.register('recipeCard', (options) => {
-      return this.createRecipeCardElement(options);
-    });
-
-    // Form input creator
-    this.register('formInput', (options) => {
-      return this.createFormInputElement(options);
-    });
-
-    // Button creator
-    this.register('button', (options) => {
-      return this.createButtonElement(options);
-    });
-  }
-
-  /**
-   * Register a new creator function
-   */
-  register(type, creatorFunction) {
-    this.creators.set(type, creatorFunction);
-  }
-
-  /**
-   * Create an instance using the factory
-   */
-  create(type, options = {}) {
-    const creator = this.creators.get(type);
-    
-    if (!creator) {
-      throw new Error(`No creator registered for type: ${type}`);
-    }
-    
-    return creator(options);
-  }
-
-  /**
-   * Check if a type is registered
-   */
-  isRegistered(type) {
-    return this.creators.has(type);
-  }
-
-  /**
-   * Get all registered types
-   */
-  getRegisteredTypes() {
-    return Array.from(this.creators.keys());
-  }
-
-  /**
-   * Unregister a creator
-   */
-  unregister(type) {
-    return this.creators.delete(type);
-  }
-
-  // FACTORY CREATOR METHODS
-
-  /**
-   * Create toast notification element
-   */
-  createToastElement({ message, type = 'info', duration = 3000, onClose }) {
-    const toast = document.createElement('div');
-    toast.className = `toast toast--${type}`;
-    
-    const iconMap = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
-    };
-
-    toast.innerHTML = `
-      <div class="toast__icon">${iconMap[type] || iconMap.info}</div>
-      <div class="toast__content">
-        <div class="toast__title">${this.capitalizeFirstLetter(type)}</div>
-        <p class="toast__message">${this.escapeHtml(message)}</p>
-      </div>
-      <button class="toast__close" aria-label="Cerrar notificación">×</button>
-    `;
-
-    // Add close functionality
-    const closeButton = toast.querySelector('.toast__close');
-    closeButton.addEventListener('click', () => {
-      if (onClose) onClose(toast);
-    });
-
-    return toast;
-  }
-
-  /**
-   * Create modal element
-   */
-  createModalElement({ title, content, size = 'medium', closable = true, onClose }) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-labelledby', 'modal-title');
-    
-    const modalId = 'modal-' + Date.now();
-    
-    modal.innerHTML = `
-      <div class="modal__backdrop"></div>
-      <div class="modal__container ${size === 'large' ? 'modal__container--large' : ''}">
-        <div class="modal__content">
-          ${title ? `
-            <header class="modal__header">
-              <h2 class="modal__title" id="${modalId}-title">${this.escapeHtml(title)}</h2>
-              ${closable ? '<button class="modal__close" aria-label="Cerrar modal">×</button>' : ''}
-            </header>
-          ` : ''}
-          <div class="modal__body">
-            ${typeof content === 'string' ? content : ''}
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Add close functionality
-    if (closable) {
-      const closeButton = modal.querySelector('.modal__close');
-      const backdrop = modal.querySelector('.modal__backdrop');
-      
-      const closeModal = () => {
-        if (onClose) onClose(modal);
-      };
-      
-      if (closeButton) closeButton.addEventListener('click', closeModal);
-      if (backdrop) backdrop.addEventListener('click', closeModal);
-    }
-
-    // Add content if it's an element
-    if (content && typeof content === 'object' && content.nodeType) {
-      const modalBody = modal.querySelector('.modal__body');
-      modalBody.innerHTML = '';
-      modalBody.appendChild(content);
-    }
-
-    return modal;
-  }
-
-  /**
-   * Create recipe card element
-   */
-  createRecipeCardElement({ recipe, onClick, onFavorite, onEdit, onDelete }) {
-    const card = document.createElement('article');
-    card.className = 'recipe-card';
-    card.setAttribute('data-recipe-id', recipe.id);
-    
-    const categoriesHtml = recipe.categories.map(cat => 
-      `<span class="category-tag category-tag--${cat}">${this.capitalizeCategoryName(cat)}</span>`
-    ).join('');
-
-    card.innerHTML = `
-      <div class="recipe-card__image" ${recipe.imageUrl ? `style="background-image: url(${recipe.imageUrl})"` : ''}>
-        ${recipe.imageUrl ? '' : '🍽️'}
-      </div>
-      <div class="recipe-card__content">
-        <header class="recipe-card__header">
-          <h3 class="recipe-card__title">${this.escapeHtml(recipe.title)}</h3>
-          <button class="recipe-card__favorite ${recipe.isFavorite ? 'recipe-card__favorite--active' : ''}" 
-                  aria-label="${recipe.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
-            ${recipe.isFavorite ? '❤️' : '🤍'}
-          </button>
-        </header>
+    function crearInstancia() {
+        // Variables privadas
+        let recetas = [];
+        let configuracion = {
+            idioma: 'es',
+            temaOscuro: false,
+            ultimaCategoria: 'all',
+            mostrarFavoritas: false
+        };
         
-        <div class="recipe-card__meta">
-          <span class="recipe-card__time">
-            <span aria-hidden="true">⏱️</span>
-            ${recipe.cookingTime} min
-          </span>
-          <span class="recipe-card__difficulty">
-            Dificultad: ${recipe.difficulty}
-          </span>
-        </div>
-        
-        <div class="recipe-card__categories">
-          ${categoriesHtml}
-        </div>
-        
-        <p class="recipe-card__description">
-          ${this.escapeHtml(recipe.description)}
-        </p>
-        
-        <footer class="recipe-card__actions">
-          <button class="recipe-card__action" data-action="view">Ver receta</button>
-          <button class="recipe-card__action" data-action="edit">Editar</button>
-          <button class="recipe-card__action" data-action="delete">Eliminar</button>
-        </footer>
-      </div>
-    `;
-
-    // Add event listeners
-    if (onClick) {
-      card.addEventListener('click', (e) => {
-        if (!e.target.closest('button')) onClick(recipe);
-      });
-    }
-
-    const favoriteBtn = card.querySelector('.recipe-card__favorite');
-    if (favoriteBtn && onFavorite) {
-      favoriteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        onFavorite(recipe);
-      });
-    }
-
-    const actionButtons = card.querySelectorAll('.recipe-card__action');
-    actionButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = button.getAttribute('data-action');
-        
-        switch (action) {
-          case 'view':
-            if (onClick) onClick(recipe);
-            break;
-          case 'edit':
-            if (onEdit) onEdit(recipe);
-            break;
-          case 'delete':
-            if (onDelete) onDelete(recipe);
-            break;
+        // Métodos privados
+        function validarReceta(datos) {
+            return Validador.receta(datos);
         }
-      });
-    });
-
-    return card;
-  }
-
-  /**
-   * Create form input element
-   */
-  createFormInputElement({ 
-    type = 'text', 
-    name, 
-    label, 
-    placeholder, 
-    required = false, 
-    value = '', 
-    helpText,
-    validation 
-  }) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'form-group';
-    
-    const inputId = `input-${name}-${Date.now()}`;
-    
-    let inputElement;
-    if (type === 'textarea') {
-      inputElement = document.createElement('textarea');
-      inputElement.className = 'form-textarea';
-    } else {
-      inputElement = document.createElement('input');
-      inputElement.type = type;
-      inputElement.className = 'form-input';
+        
+        function guardarEnStorage() {
+            try {
+                localStorage.setItem(AppConfig.STORAGE_KEYS.recipes, JSON.stringify(
+                    recetas.map(receta => receta.toJSON())
+                ));
+                localStorage.setItem(AppConfig.STORAGE_KEYS.settings, JSON.stringify(configuracion));
+                return true;
+            } catch (error) {
+                console.error('Error guardando en localStorage:', error);
+                return false;
+            }
+        }
+        
+        function cargarDesdeStorage() {
+            try {
+                const recetasGuardadas = localStorage.getItem(AppConfig.STORAGE_KEYS.recipes);
+                const configGuardada = localStorage.getItem(AppConfig.STORAGE_KEYS.settings);
+                
+                if (recetasGuardadas) {
+                    const datosRecetas = JSON.parse(recetasGuardadas);
+                    recetas = datosRecetas.map(datos => Receta.fromJSON(datos));
+                } else {
+                    // Cargar recetas iniciales si no hay datos guardados
+                    recetas = crearRecetasIniciales();
+                    guardarEnStorage();
+                }
+                
+                if (configGuardada) {
+                    configuracion = { ...configuracion, ...JSON.parse(configGuardada) };
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error cargando desde localStorage:', error);
+                recetas = crearRecetasIniciales();
+                return false;
+            }
+        }
+        
+        // API pública
+        return {
+            // Métodos CRUD
+            obtenerRecetas: function() {
+                return [...recetas]; // Retorna copia para inmutabilidad
+            },
+            
+            obtenerRecetaPorId: function(id) {
+                return recetas.find(receta => receta.id === id);
+            },
+            
+            agregarReceta: function(datos) {
+                const validacion = validarReceta(datos);
+                if (!validacion.valido) {
+                    throw new Error('Datos de receta inválidos: ' + validacion.errores.join(', '));
+                }
+                
+                const nuevaReceta = new Receta(
+                    datos.nombre,
+                    datos.ingredientes,
+                    datos.pasos,
+                    datos.tiempo,
+                    datos
+                );
+                
+                recetas.push(nuevaReceta);
+                guardarEnStorage();
+                EventManager.emit('receta:agregada', nuevaReceta);
+                return nuevaReceta;
+            },
+            
+            actualizarReceta: function(id, datos) {
+                const indice = recetas.findIndex(receta => receta.id === id);
+                if (indice === -1) {
+                    throw new Error('Receta no encontrada');
+                }
+                
+                const validacion = validarReceta(datos);
+                if (!validacion.valido) {
+                    throw new Error('Datos de receta inválidos: ' + validacion.errores.join(', '));
+                }
+                
+                recetas[indice].actualizar(datos);
+                guardarEnStorage();
+                EventManager.emit('receta:actualizada', recetas[indice]);
+                return recetas[indice];
+            },
+            
+            eliminarReceta: function(id) {
+                const indice = recetas.findIndex(receta => receta.id === id);
+                if (indice === -1) {
+                    throw new Error('Receta no encontrada');
+                }
+                
+                const recetaEliminada = recetas.splice(indice, 1)[0];
+                guardarEnStorage();
+                EventManager.emit('receta:eliminada', recetaEliminada);
+                return recetaEliminada;
+            },
+            
+            // Métodos de búsqueda y filtrado
+            buscarRecetas: function(termino) {
+                if (!termino || termino.trim() === '') {
+                    return this.obtenerRecetas();
+                }
+                
+                const terminoLower = termino.toLowerCase().trim();
+                return recetas.filter(receta => {
+                    return receta.nombre.toLowerCase().includes(terminoLower) ||
+                           receta.ingredientes.some(ing => ing.toLowerCase().includes(terminoLower)) ||
+                           receta.categoria.some(cat => cat.toLowerCase().includes(terminoLower));
+                });
+            },
+            
+            filtrarPorCategoria: function(categoria) {
+                if (categoria === 'all') {
+                    return this.obtenerRecetas();
+                }
+                
+                return recetas.filter(receta => receta.categoria.includes(categoria));
+            },
+            
+            obtenerFavoritas: function() {
+                return recetas.filter(receta => receta.favorita);
+            },
+            
+            // Métodos de acción
+            marcarComoFavorita: function(id) {
+                const receta = this.obtenerRecetaPorId(id);
+                if (receta) {
+                    receta.marcarComoFavorita();
+                    guardarEnStorage();
+                    EventManager.emit('receta:favorita', receta);
+                    return receta;
+                }
+                throw new Error('Receta no encontrada');
+            },
+            
+            marcarComoCocinada: function(id) {
+                const receta = this.obtenerRecetaPorId(id);
+                if (receta) {
+                    receta.marcarComoCocinada();
+                    guardarEnStorage();
+                    EventManager.emit('receta:cocinada', receta);
+                    return receta;
+                }
+                throw new Error('Receta no encontrada');
+            },
+            
+            actualizarRating: function(id, rating) {
+                const receta = this.obtenerRecetaPorId(id);
+                if (receta) {
+                    receta.actualizarRatingManual(rating);
+                    guardarEnStorage();
+                    EventManager.emit('receta:rating', receta);
+                    return receta;
+                }
+                throw new Error('Receta no encontrada');
+            },
+            
+            // Métodos de estadísticas
+            obtenerEstadisticas: function() {
+                const total = recetas.length;
+                const favoritas = recetas.filter(r => r.favorita).length;
+                const tiempoPromedio = total > 0 ? 
+                    Math.round(recetas.reduce((acc, r) => acc + r.tiempo, 0) / total) : 0;
+                const totalCocinadas = recetas.reduce((acc, r) => acc + r.vecesCocinada, 0);
+                
+                return {
+                    total,
+                    favoritas,
+                    tiempoPromedio,
+                    totalCocinadas
+                };
+            },
+            
+            // Configuración
+            obtenerConfiguracion: function() {
+                return { ...configuracion };
+            },
+            
+            actualizarConfiguracion: function(nuevaConfig) {
+                configuracion = { ...configuracion, ...nuevaConfig };
+                guardarEnStorage();
+                EventManager.emit('configuracion:actualizada', configuracion);
+                return configuracion;
+            },
+            
+            // Inicialización
+            inicializar: function() {
+                cargarDesdeStorage();
+                EventManager.emit('gestor:inicializado', this);
+                return this;
+            },
+            
+            // Métodos de exportación/importación
+            exportarDatos: function() {
+                return {
+                    recetas: recetas.map(r => r.toJSON()),
+                    configuracion: configuracion,
+                    version: '1.0',
+                    fechaExportacion: new Date().toISOString()
+                };
+            },
+            
+            importarDatos: function(datos) {
+                try {
+                    if (datos.recetas) {
+                        recetas = datos.recetas.map(r => Receta.fromJSON(r));
+                    }
+                    if (datos.configuracion) {
+                        configuracion = { ...configuracion, ...datos.configuracion };
+                    }
+                    guardarEnStorage();
+                    EventManager.emit('datos:importados', datos);
+                    return true;
+                } catch (error) {
+                    console.error('Error importando datos:', error);
+                    return false;
+                }
+            }
+        };
     }
     
-    inputElement.id = inputId;
-    inputElement.name = name;
-    if (placeholder) inputElement.placeholder = placeholder;
-    if (required) inputElement.required = true;
-    if (value) inputElement.value = value;
-
-    wrapper.innerHTML = `
-      ${label ? `<label for="${inputId}" class="form-label">${this.escapeHtml(label)}${required ? ' *' : ''}</label>` : ''}
-      ${helpText ? `<small class="form-help">${this.escapeHtml(helpText)}</small>` : ''}
-      <div class="form-error" style="display: none;"></div>
-    `;
-
-    // Insert input element
-    const errorDiv = wrapper.querySelector('.form-error');
-    wrapper.insertBefore(inputElement, errorDiv);
-
-    // Add validation if provided
-    if (validation) {
-      inputElement.addEventListener('blur', () => {
-        const isValid = validation(inputElement.value);
-        this.toggleInputValidation(inputElement, isValid);
-      });
-    }
-
-    return wrapper;
-  }
-
-  /**
-   * Create button element
-   */
-  createButtonElement({ 
-    text, 
-    type = 'button', 
-    variant = 'primary', 
-    size = 'medium', 
-    icon, 
-    disabled = false, 
-    onClick 
-  }) {
-    const button = document.createElement('button');
-    button.type = type;
-    button.className = `btn btn--${variant}`;
-    
-    if (size !== 'medium') {
-      button.classList.add(`btn--${size}`);
-    }
-    
-    if (disabled) {
-      button.disabled = true;
-    }
-
-    // Add content
-    let content = '';
-    if (icon) {
-      content += `<span class="btn__icon">${icon}</span>`;
-    }
-    if (text) {
-      content += `<span class="btn__text">${this.escapeHtml(text)}</span>`;
-    }
-    
-    button.innerHTML = content;
-
-    // Add click handler
-    if (onClick) {
-      button.addEventListener('click', onClick);
-    }
-
-    return button;
-  }
-
-  // UTILITY METHODS
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  /**
-   * Capitalize first letter
-   */
-  capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  /**
-   * Capitalize category names
-   */
-  capitalizeCategoryName(category) {
-    const names = {
-      breakfast: 'Desayuno',
-      lunch: 'Almuerzo',
-      dinner: 'Cena',
-      dessert: 'Postre',
-      vegetarian: 'Vegetariano',
-      quick: 'Rápido'
+    return {
+        obtenerInstancia: function() {
+            if (!instancia) {
+                instancia = crearInstancia();
+            }
+            return instancia;
+        }
     };
-    return names[category] || this.capitalizeFirstLetter(category);
-  }
-
-  /**
-   * Toggle input validation state
-   */
-  toggleInputValidation(input, isValid) {
-    const formGroup = input.closest('.form-group');
-    const errorDiv = formGroup?.querySelector('.form-error');
-    
-    if (isValid) {
-      input.classList.remove('form-input--error');
-      if (errorDiv) {
-        errorDiv.style.display = 'none';
-        errorDiv.textContent = '';
-      }
-    } else {
-      input.classList.add('form-input--error');
-      if (errorDiv) {
-        errorDiv.style.display = 'block';
-        errorDiv.textContent = 'Este campo contiene errores';
-      }
-    }
-  }
-}
+})();
 
 /**
- * MODULE PATTERN
- * Encapsulates related functionality in a single module
- * Used for: Organizing code, creating namespaces, data privacy
+ * 2. OBSERVER PATTERN - Gestor de Eventos
+ * Permite la comunicación entre componentes sin acoplamiento directo
  */
-export const ModulePattern = {
-  /**
-   * Create a new module
-   */
-  create(name, dependencies = [], factory) {
-    const module = {
-      name,
-      dependencies,
-      exports: {},
-      private: {},
-      initialize: factory
+const EventManager = (function() {
+    const eventos = {};
+    
+    return {
+        on: function(evento, callback) {
+            if (!eventos[evento]) {
+                eventos[evento] = [];
+            }
+            eventos[evento].push(callback);
+        },
+        
+        off: function(evento, callback) {
+            if (eventos[evento]) {
+                eventos[evento] = eventos[evento].filter(cb => cb !== callback);
+            }
+        },
+        
+        emit: function(evento, datos) {
+            if (eventos[evento]) {
+                eventos[evento].forEach(callback => {
+                    try {
+                        callback(datos);
+                    } catch (error) {
+                        console.error(`Error en event listener para ${evento}:`, error);
+                    }
+                });
+            }
+        },
+        
+        once: function(evento, callback) {
+            const onceCallback = (datos) => {
+                callback(datos);
+                this.off(evento, onceCallback);
+            };
+            this.on(evento, onceCallback);
+        }
     };
+})();
 
-    // Initialize the module
-    if (typeof factory === 'function') {
-      const moduleApi = factory(module.private);
-      if (moduleApi) {
-        module.exports = moduleApi;
-      }
+/**
+ * 3. FACTORY PATTERN - Factory de Componentes UI
+ * Crea diferentes tipos de componentes de interfaz
+ */
+const ComponentFactory = {
+    crearToast: function(tipo, mensaje, duracion = AppConfig.TOAST_DURATION) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${tipo}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <span>${mensaje}</span>
+                <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
+        
+        // Auto-eliminar después de la duración especificada
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, duracion);
+        
+        return toast;
+    },
+    
+    crearTarjetaReceta: function(receta, idioma = 'es') {
+        const t = Traducciones[idioma];
+        const card = document.createElement('div');
+        card.className = 'recipe-card fade-in';
+        card.dataset.recipeId = receta.id;
+        
+        card.innerHTML = `
+            <div class="recipe-image-container">
+                <img src="${receta.imagen || AppConfig.PLACEHOLDER_IMAGE}" 
+                     alt="${receta.nombre}" 
+                     class="recipe-image"
+                     loading="lazy">
+                <div class="recipe-image-overlay">
+                    <button class="recipe-favorite-btn ${receta.favorita ? 'active' : ''}" 
+                            data-recipe-id="${receta.id}"
+                            title="${receta.favorita ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                        <i data-lucide="heart"></i>
+                    </button>
+                </div>
+                <div class="recipe-rating">
+                    ${this.crearEstrellas(receta.finalRating, true)}
+                </div>
+                ${receta.vecesCocinada > 0 ? `
+                    <div class="recipe-cooked-badge">${receta.vecesCocinada}x</div>
+                ` : ''}
+            </div>
+            
+            <div class="recipe-content">
+                <h3 class="recipe-title">${receta.nombre}</h3>
+                
+                <div class="recipe-meta">
+                    <div class="recipe-meta-item">
+                        <i data-lucide="clock"></i>
+                        <span>${receta.tiempo} ${t.minutes}</span>
+                    </div>
+                    <div class="recipe-meta-item">
+                        <i data-lucide="users"></i>
+                        <span>${receta.porciones}</span>
+                    </div>
+                </div>
+                
+                <div class="recipe-categories">
+                    ${receta.categoria.slice(0, 2).map(cat => 
+                        `<span class="recipe-category">${t.categoryNames[cat] || cat}</span>`
+                    ).join('')}
+                    ${receta.categoria.length > 2 ? 
+                        `<span class="recipe-category">+${receta.categoria.length - 2}</span>` : ''}
+                </div>
+                
+                <div class="recipe-stats">
+                    <span>${t.timesCooked}: ${receta.vecesCocinada}</span>
+                    <span>${t.lastCooked}: ${formatearFechaRelativa(receta.ultimaVezCocinada, idioma)}</span>
+                </div>
+                
+                <div class="recipe-actions">
+                    <span class="recipe-difficulty ${receta.dificultad.toLowerCase()}">
+                        ${t[receta.dificultad.toLowerCase()]}
+                    </span>
+                    
+                    <div class="recipe-action-buttons">
+                        <button class="recipe-action-btn cook" 
+                                data-action="cook" 
+                                data-recipe-id="${receta.id}"
+                                title="${t.markAsCooked}">
+                            <i data-lucide="chef-hat"></i>
+                        </button>
+                        <button class="recipe-action-btn view" 
+                                data-action="view" 
+                                data-recipe-id="${receta.id}"
+                                title="${t.view}">
+                            <i data-lucide="eye"></i>
+                        </button>
+                        <button class="recipe-action-btn edit" 
+                                data-action="edit" 
+                                data-recipe-id="${receta.id}"
+                                title="${t.edit}">
+                            <i data-lucide="edit"></i>
+                        </button>
+                        <button class="recipe-action-btn delete" 
+                                data-action="delete" 
+                                data-recipe-id="${receta.id}"
+                                title="${t.delete}">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return card;
+    },
+    
+    crearEstrellas: function(rating, readonly = false) {
+        const estrellas = [];
+        for (let i = 1; i <= 5; i++) {
+            const activa = i <= rating;
+            estrellas.push(`
+                <button type="button" 
+                        class="star ${activa ? 'active' : ''} ${readonly ? 'readonly' : ''}" 
+                        data-rating="${i}"
+                        ${readonly ? 'disabled' : ''}
+                        ${!readonly ? `title="${i} estrella${i > 1 ? 's' : ''}"` : ''}>
+                    <i data-lucide="star"></i>
+                </button>
+            `);
+        }
+        return `<div class="star-rating">${estrellas.join('')}</div>`;
+    },
+    
+    crearItemIngrediente: function(ingrediente, imagen, indice) {
+        const item = document.createElement('div');
+        item.className = 'ingredient-item';
+        
+        item.innerHTML = `
+            <div class="ingredient-image">
+                ${imagen && imagen !== AppConfig.PLACEHOLDER_IMAGE ? 
+                    `<img src="${imagen}" alt="${ingrediente}" loading="lazy">` :
+                    `<i data-lucide="image"></i>`
+                }
+            </div>
+            <input type="text" 
+                   class="form-input ingredient-input" 
+                   value="${ingrediente}" 
+                   data-index="${indice}"
+                   placeholder="Ingrediente ${indice + 1}">
+            <button type="button" class="remove-btn" data-type="ingredient" data-index="${indice}">
+                <i data-lucide="x"></i>
+            </button>
+        `;
+        
+        return item;
+    },
+    
+    crearItemPaso: function(paso, indice) {
+        const item = document.createElement('div');
+        item.className = 'step-item';
+        
+        item.innerHTML = `
+            <div class="step-number">${indice + 1}</div>
+            <textarea class="form-textarea step-input" 
+                      data-index="${indice}"
+                      placeholder="Paso ${indice + 1}"
+                      rows="2">${paso}</textarea>
+            <button type="button" class="remove-btn" data-type="step" data-index="${indice}">
+                <i data-lucide="x"></i>
+            </button>
+        `;
+        
+        return item;
     }
-
-    return module;
-  },
-
-  /**
-   * Module registry for dependency management
-   */
-  registry: new Map(),
-
-  /**
-   * Register a module
-   */
-  register(module) {
-    this.registry.set(module.name, module);
-    return module;
-  },
-
-  /**
-   * Get a registered module
-   */
-  get(name) {
-    return this.registry.get(name);
-  },
-
-  /**
-   * Load a module with its dependencies
-   */
-  load(name) {
-    const module = this.registry.get(name);
-    if (!module) {
-      throw new Error(`Module '${name}' not found`);
-    }
-
-    // Load dependencies first
-    const loadedDependencies = module.dependencies.map(depName => {
-      const dep = this.load(depName);
-      return dep.exports;
-    });
-
-    // If module hasn't been initialized, do it now
-    if (typeof module.initialize === 'function') {
-      const moduleApi = module.initialize(module.private, ...loadedDependencies);
-      if (moduleApi) {
-        module.exports = moduleApi;
-      }
-      module.initialize = null; // Prevent re-initialization
-    }
-
-    return module;
-  }
 };
 
 /**
- * COMMAND PATTERN
- * Encapsulates requests as objects, allowing for queuing, logging, and undo operations
- * Used for: Action history, undo/redo functionality, batch operations
+ * 4. COMMAND PATTERN - Comandos para acciones
+ * Encapsula acciones en objetos para poder deshacerlas, repetirlas, etc.
  */
-export class CommandPattern {
-  constructor() {
-    this.history = [];
-    this.currentIndex = -1;
-    this.maxHistorySize = 50;
-  }
-
-  /**
-   * Execute a command and add it to history
-   */
-  execute(command) {
-    // Remove any commands after current index (for redo functionality)
-    this.history = this.history.slice(0, this.currentIndex + 1);
+const CommandManager = (function() {
+    const historial = [];
+    let indiceActual = -1;
     
-    // Execute the command
-    const result = command.execute();
-    
-    // Add to history if command is undoable
-    if (command.undo) {
-      this.history.push(command);
-      this.currentIndex++;
-      
-      // Limit history size
-      if (this.history.length > this.maxHistorySize) {
-        this.history.shift();
-        this.currentIndex--;
-      }
+    function Comando(accion, deshacer, datos) {
+        this.accion = accion;
+        this.deshacer = deshacer;
+        this.datos = datos;
+        this.timestamp = new Date();
     }
     
-    return result;
-  }
-
-  /**
-   * Undo the last command
-   */
-  undo() {
-    if (this.canUndo()) {
-      const command = this.history[this.currentIndex];
-      const result = command.undo();
-      this.currentIndex--;
-      return result;
-    }
-    return null;
-  }
-
-  /**
-   * Redo the next command
-   */
-  redo() {
-    if (this.canRedo()) {
-      this.currentIndex++;
-      const command = this.history[this.currentIndex];
-      return command.execute();
-    }
-    return null;
-  }
-
-  /**
-   * Check if undo is possible
-   */
-  canUndo() {
-    return this.currentIndex >= 0;
-  }
-
-  /**
-   * Check if redo is possible
-   */
-  canRedo() {
-    return this.currentIndex < this.history.length - 1;
-  }
-
-  /**
-   * Clear command history
-   */
-  clearHistory() {
-    this.history = [];
-    this.currentIndex = -1;
-  }
-
-  /**
-   * Get current history size
-   */
-  getHistorySize() {
-    return this.history.length;
-  }
-
-  /**
-   * Get history as array of command descriptions
-   */
-  getHistoryDescriptions() {
-    return this.history.map(command => command.description || 'Unknown command');
-  }
-}
-
-/**
- * STRATEGY PATTERN
- * Defines a family of algorithms and makes them interchangeable
- * Used for: Different sorting methods, validation strategies, formatting options
- */
-export class StrategyPattern {
-  constructor() {
-    this.strategies = new Map();
-  }
-
-  /**
-   * Register a strategy
-   */
-  register(name, strategy) {
-    this.strategies.set(name, strategy);
-  }
-
-  /**
-   * Execute a strategy
-   */
-  execute(name, ...args) {
-    const strategy = this.strategies.get(name);
-    if (!strategy) {
-      throw new Error(`Strategy '${name}' not found`);
-    }
-    return strategy(...args);
-  }
-
-  /**
-   * Check if strategy exists
-   */
-  has(name) {
-    return this.strategies.has(name);
-  }
-
-  /**
-   * Get all strategy names
-   */
-  getStrategyNames() {
-    return Array.from(this.strategies.keys());
-  }
-
-  /**
-   * Remove a strategy
-   */
-  remove(name) {
-    return this.strategies.delete(name);
-  }
-}
-
-// PREDEFINED COMMAND CLASSES
+    return {
+        ejecutar: function(comando) {
+            try {
+                comando.accion();
+                
+                // Limpiar historial futuro si estamos en el medio
+                if (indiceActual < historial.length - 1) {
+                    historial.splice(indiceActual + 1);
+                }
+                
+                historial.push(comando);
+                indiceActual++;
+                
+                // Limitar historial a últimos 50 comandos
+                if (historial.length > 50) {
+                    historial.shift();
+                    indiceActual--;
+                }
+                
+                EventManager.emit('comando:ejecutado', comando);
+            } catch (error) {
+                console.error('Error ejecutando comando:', error);
+                EventManager.emit('comando:error', { comando, error });
+            }
+        },
+        
+        deshacer: function() {
+            if (indiceActual >= 0) {
+                const comando = historial[indiceActual];
+                try {
+                    comando.deshacer();
+                    indiceActual--;
+                    EventManager.emit('comando:deshecho', comando);
+                } catch (error) {
+                    console.error('Error deshaciendo comando:', error);
+                }
+            }
+        },
+        
+        rehacer: function() {
+            if (indiceActual < historial.length - 1) {
+                indiceActual++;
+                const comando = historial[indiceActual];
+                try {
+                    comando.accion();
+                    EventManager.emit('comando:rehecho', comando);
+                } catch (error) {
+                    console.error('Error rehaciendo comando:', error);
+                }
+            }
+        },
+        
+        puedeDeshacer: function() {
+            return indiceActual >= 0;
+        },
+        
+        puedeRehacer: function() {
+            return indiceActual < historial.length - 1;
+        },
+        
+        crearComandoAgregarReceta: function(datos) {
+            const gestor = GestorRecetas.obtenerInstancia();
+            let recetaCreada = null;
+            
+            return new Comando(
+                () => {
+                    recetaCreada = gestor.agregarReceta(datos);
+                },
+                () => {
+                    if (recetaCreada) {
+                        gestor.eliminarReceta(recetaCreada.id);
+                    }
+                },
+                datos
+            );
+        },
+        
+        crearComandoEliminarReceta: function(id) {
+            const gestor = GestorRecetas.obtenerInstancia();
+            let recetaEliminada = null;
+            
+            return new Comando(
+                () => {
+                    recetaEliminada = gestor.eliminarReceta(id);
+                },
+                () => {
+                    if (recetaEliminada) {
+                        gestor.agregarReceta(recetaEliminada.toJSON());
+                    }
+                },
+                { id }
+            );
+        }
+    };
+})();
 
 /**
- * Recipe command for adding recipes
+ * 5. STRATEGY PATTERN - Estrategias de búsqueda
+ * Diferentes algoritmos de búsqueda intercambiables
  */
-export class AddRecipeCommand {
-  constructor(recipeCollection, recipeData) {
-    this.recipeCollection = recipeCollection;
-    this.recipeData = recipeData;
-    this.addedRecipe = null;
-    this.description = `Add recipe: ${recipeData.title}`;
-  }
-
-  execute() {
-    this.addedRecipe = this.recipeCollection.add(this.recipeData);
-    return this.addedRecipe;
-  }
-
-  undo() {
-    if (this.addedRecipe) {
-      return this.recipeCollection.delete(this.addedRecipe.id);
+const EstrategiasBusqueda = {
+    simple: function(recetas, termino) {
+        const terminoLower = termino.toLowerCase();
+        return recetas.filter(receta => 
+            receta.nombre.toLowerCase().includes(terminoLower)
+        );
+    },
+    
+    completa: function(recetas, termino) {
+        const terminoLower = termino.toLowerCase();
+        return recetas.filter(receta => {
+            return receta.nombre.toLowerCase().includes(terminoLower) ||
+                   receta.ingredientes.some(ing => ing.toLowerCase().includes(terminoLower)) ||
+                   receta.categoria.some(cat => cat.toLowerCase().includes(terminoLower)) ||
+                   receta.notas.toLowerCase().includes(terminoLower);
+        });
+    },
+    
+    inteligente: function(recetas, termino) {
+        const terminoLower = termino.toLowerCase();
+        const palabras = terminoLower.split(' ').filter(p => p.length > 0);
+        
+        return recetas.map(receta => {
+            let score = 0;
+            
+            // Puntaje por coincidencias en nombre (peso alto)
+            palabras.forEach(palabra => {
+                if (receta.nombre.toLowerCase().includes(palabra)) {
+                    score += 10;
+                }
+            });
+            
+            // Puntaje por coincidencias en ingredientes (peso medio)
+            palabras.forEach(palabra => {
+                receta.ingredientes.forEach(ingrediente => {
+                    if (ingrediente.toLowerCase().includes(palabra)) {
+                        score += 5;
+                    }
+                });
+            });
+            
+            // Puntaje por coincidencias en categorías (peso medio)
+            palabras.forEach(palabra => {
+                receta.categoria.forEach(categoria => {
+                    if (categoria.toLowerCase().includes(palabra)) {
+                        score += 3;
+                    }
+                });
+            });
+            
+            // Puntaje por popularidad
+            score += receta.finalRating;
+            score += receta.vecesCocinada * 0.5;
+            
+            return { receta, score };
+        })
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(item => item.receta);
     }
-    return null;
-  }
-}
-
-/**
- * Recipe command for updating recipes
- */
-export class UpdateRecipeCommand {
-  constructor(recipeCollection, recipeId, newData) {
-    this.recipeCollection = recipeCollection;
-    this.recipeId = recipeId;
-    this.newData = newData;
-    this.oldData = null;
-    this.description = `Update recipe: ${newData.title || recipeId}`;
-  }
-
-  execute() {
-    const recipe = this.recipeCollection.get(this.recipeId);
-    if (recipe) {
-      this.oldData = recipe.toJSON();
-      return this.recipeCollection.update(this.recipeId, this.newData);
-    }
-    return null;
-  }
-
-  undo() {
-    if (this.oldData) {
-      return this.recipeCollection.update(this.recipeId, this.oldData);
-    }
-    return null;
-  }
-}
-
-/**
- * Recipe command for deleting recipes
- */
-export class DeleteRecipeCommand {
-  constructor(recipeCollection, recipeId) {
-    this.recipeCollection = recipeCollection;
-    this.recipeId = recipeId;
-    this.deletedRecipe = null;
-    this.description = `Delete recipe: ${recipeId}`;
-  }
-
-  execute() {
-    const recipe = this.recipeCollection.get(this.recipeId);
-    if (recipe) {
-      this.deletedRecipe = recipe.toJSON();
-      this.description = `Delete recipe: ${recipe.title}`;
-    }
-    return this.recipeCollection.delete(this.recipeId);
-  }
-
-  undo() {
-    if (this.deletedRecipe) {
-      return this.recipeCollection.add(this.deletedRecipe);
-    }
-    return null;
-  }
-}
-
-// EXPORT ALL PATTERNS
-export default {
-  SingletonPattern,
-  ObserverPattern,
-  FactoryPattern,
-  ModulePattern,
-  CommandPattern,
-  StrategyPattern,
-  AddRecipeCommand,
-  UpdateRecipeCommand,
-  DeleteRecipeCommand
 };
+
+/**
+ * 6. MODULE PATTERN - Módulo de Gestión de Temas
+ * Encapsula la funcionalidad del tema en un módulo
+ */
+const GestorTemas = (function() {
+    let temaActual = 'light';
+    
+    function aplicarTema(tema) {
+        document.documentElement.setAttribute('data-theme', tema);
+        const icono = document.getElementById('theme-icon');
+        if (icono) {
+            icono.setAttribute('data-lucide', tema === 'dark' ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+    }
+    
+    function guardarTema(tema) {
+        localStorage.setItem(AppConfig.STORAGE_KEYS.theme, tema);
+    }
+    
+    function cargarTema() {
+        const temaGuardado = localStorage.getItem(AppConfig.STORAGE_KEYS.theme);
+        const temaPreferido = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        return temaGuardado || temaPreferido;
+    }
+    
+    return {
+        inicializar: function() {
+            temaActual = cargarTema();
+            aplicarTema(temaActual);
+            
+            // Escuchar cambios en preferencias del sistema
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem(AppConfig.STORAGE_KEYS.theme)) {
+                    temaActual = e.matches ? 'dark' : 'light';
+                    aplicarTema(temaActual);
+                }
+            });
+        },
+        
+        alternar: function() {
+            temaActual = temaActual === 'light' ? 'dark' : 'light';
+            aplicarTema(temaActual);
+            guardarTema(temaActual);
+            EventManager.emit('tema:cambiado', temaActual);
+            return temaActual;
+        },
+        
+        establecer: function(tema) {
+            if (['light', 'dark'].includes(tema)) {
+                temaActual = tema;
+                aplicarTema(tema);
+                guardarTema(tema);
+                EventManager.emit('tema:cambiado', tema);
+            }
+        },
+        
+        obtener: function() {
+            return temaActual;
+        }
+    };
+})();
+
+/**
+ * 7. PROXY PATTERN - Proxy para APIs externas
+ * Controla el acceso a APIs externas con cache y rate limiting
+ */
+const APIProxy = (function() {
+    const cache = new Map();
+    const rateLimits = new Map();
+    
+    function puedeHacerPeticion(endpoint) {
+        const ahora = Date.now();
+        const ultimaPeticion = rateLimits.get(endpoint) || 0;
+        const LIMITE_MS = 1000; // 1 segundo entre peticiones
+        
+        if (ahora - ultimaPeticion < LIMITE_MS) {
+            return false;
+        }
+        
+        rateLimits.set(endpoint, ahora);
+        return true;
+    }
+    
+    function obtenerDeCache(clave) {
+        const entrada = cache.get(clave);
+        if (entrada) {
+            const DURACION_CACHE = 5 * 60 * 1000; // 5 minutos
+            if (Date.now() - entrada.timestamp < DURACION_CACHE) {
+                return entrada.datos;
+            }
+            cache.delete(clave);
+        }
+        return null;
+    }
+    
+    function guardarEnCache(clave, datos) {
+        cache.set(clave, {
+            datos: datos,
+            timestamp: Date.now()
+        });
+    }
+    
+    return {
+        obtenerImagen: async function(query) {
+            const cacheKey = `imagen:${query}`;
+            const datosCache = obtenerDeCache(cacheKey);
+            
+            if (datosCache) {
+                return datosCache;
+            }
+            
+            if (!puedeHacerPeticion('unsplash')) {
+                return AppConfig.PLACEHOLDER_IMAGE;
+            }
+            
+            try {
+                const imagen = await obtenerImagenUnsplash(query);
+                guardarEnCache(cacheKey, imagen);
+                return imagen;
+            } catch (error) {
+                console.error('Error obteniendo imagen:', error);
+                return AppConfig.PLACEHOLDER_IMAGE;
+            }
+        },
+        
+        obtenerImagenIngrediente: async function(ingrediente) {
+            const cacheKey = `ingrediente:${ingrediente}`;
+            const datosCache = obtenerDeCache(cacheKey);
+            
+            if (datosCache) {
+                return datosCache;
+            }
+            
+            if (!puedeHacerPeticion('unsplash-ingredient')) {
+                return AppConfig.PLACEHOLDER_IMAGE;
+            }
+            
+            try {
+                const imagen = await obtenerImagenIngrediente(ingrediente);
+                guardarEnCache(cacheKey, imagen);
+                return imagen;
+            } catch (error) {
+                console.error('Error obteniendo imagen de ingrediente:', error);
+                return AppConfig.PLACEHOLDER_IMAGE;
+            }
+        },
+        
+        limpiarCache: function() {
+            cache.clear();
+        }
+    };
+})();
+
+// Exportar patrones para uso global
+if (typeof window !== 'undefined') {
+    window.GestorRecetas = GestorRecetas;
+    window.EventManager = EventManager;
+    window.ComponentFactory = ComponentFactory;
+    window.CommandManager = CommandManager;
+    window.EstrategiasBusqueda = EstrategiasBusqueda;
+    window.GestorTemas = GestorTemas;
+    window.APIProxy = APIProxy;
+}
