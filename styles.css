@@ -282,15 +282,26 @@ body {
 
 /* Estilos para el botón de exportación purple */
 .btn-icon.purple {
-  color: var(--primary-purple) !important;
-  background-color: rgba(139, 92, 246, 0.1) !important;
-  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: white !important;
+  background-color: #8B5CF6 !important;
+  border: 1px solid #8B5CF6 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px !important;
+  border-radius: 4px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
 }
 
 .btn-icon.purple:hover {
-  background-color: rgba(139, 92, 246, 0.2) !important;
+  background-color: #7C3AED !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2) !important;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3) !important;
+  color: white !important;
 }
 
 /* Form Styles */

@@ -170,8 +170,8 @@ class UIManager {
                         <button class="btn-icon blue" data-action="view" title="${t("view")}">
                             <i data-lucide="eye"></i>
                         </button>
-                        <button class="btn-icon purple" data-action="export" title="${t("exportRecipe")}" style="background-color: #8B5CF6 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">
-                            <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                        <button class="btn-icon purple export-btn" data-action="export" title="${t("exportRecipe")}" style="background-color: #8B5CF6 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 8px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 36px !important; min-height: 36px !important; visibility: visible !important; opacity: 1 !important; z-index: 10 !important; margin: 0 2px !important;">
+                            <i data-lucide="download" style="width: 16px; height: 16px; color: white !important; display: block !important;"></i>
                         </button>
                         <button class="btn-icon orange" data-action="edit" title="${t("edit")}">
                             <i data-lucide="edit"></i>
@@ -204,7 +204,13 @@ class UIManager {
       e.stopPropagation()
       console.log("Export button clicked for recipe:", recipe.name)
       console.log("onExport function:", onExport)
-      onExport(recipe) // Call the export handler
+      console.log("Recipe data:", recipe)
+      console.log("ExportManager available:", !!window.exportManager)
+      try {
+        onExport(recipe) // Call the export handler
+      } catch (error) {
+        console.error("Error in onExport:", error)
+      }
     })
 
     card.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
