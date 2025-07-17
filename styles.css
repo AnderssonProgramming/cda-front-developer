@@ -280,17 +280,44 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Estilos específicos para el botón de exportación */
 .btn-icon.purple {
-  color: var(--primary-purple);
-  /* Aumentar la visibilidad */
-  background-color: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background-color: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 4px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1 !important;
 }
 
 .btn-icon.purple:hover {
-  background: rgba(139, 92, 246, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+  background-color: #7C3AED !important;
+  border-color: #7C3AED !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3) !important;
+}
+
+.btn-icon.purple:focus {
+  outline: 2px solid #8B5CF6 !important;
+  outline-offset: 2px !important;
+}
+
+.btn-icon.purple svg {
+  width: 16px !important;
+  height: 16px !important;
+  stroke: currentColor !important;
+  fill: none !important;
 }
 
 /* Form Styles */

@@ -251,6 +251,18 @@ class RecipeManager {
     if (window.lucide) {
       window.lucide.createIcons()
     }
+    
+    // Debug: Verificar que los botones de exportación sean visibles
+    const exportButtons = document.querySelectorAll('[data-action="export"]')
+    console.log("Export buttons found:", exportButtons.length)
+    exportButtons.forEach((btn, index) => {
+      console.log(`Export button ${index}:`, {
+        visible: btn.offsetParent !== null,
+        display: getComputedStyle(btn).display,
+        opacity: getComputedStyle(btn).opacity,
+        visibility: getComputedStyle(btn).visibility
+      })
+    })
   }
 
   // Form handling for Add/Edit
@@ -460,10 +472,16 @@ class RecipeManager {
 
   // Exportar receta utilizando ExportManager
   exportRecipe(recipe) {
+    console.log("exportRecipe called with recipe:", recipe);
     if (window.app && window.app.exportManager) {
+      console.log("ExportManager found, opening modal");
       window.app.exportManager.openExportModal(recipe);
     } else {
       console.error("ExportManager no está disponible");
+      console.log("window.app:", window.app);
+      if (window.app) {
+        console.log("window.app.exportManager:", window.app.exportManager);
+      }
     }
   }
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Export Button</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h1>Test Export Button Visibility</h1>
+        
+        <div style="margin: 20px 0;">
+            <h2>Export Button Test</h2>
+            <button class="btn-icon purple" data-action="export" title="Export Recipe">
+                <i data-lucide="download"></i>
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h2>Other Button Colors (for comparison)</h2>
+            <button class="btn-icon blue" title="View">
+                <i data-lucide="eye"></i>
+            </button>
+            <button class="btn-icon orange" title="Edit">
+                <i data-lucide="edit"></i>
+            </button>
+            <button class="btn-icon red" title="Delete">
+                <i data-lucide="trash-2"></i>
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h2>Test with Recipe Card Structure</h2>
+            <div class="recipe-card">
+                <div class="recipe-header">
+                    <h3>Test Recipe</h3>
+                </div>
+                <div class="recipe-actions">
+                    <button class="btn-icon purple" data-action="export" title="Export Recipe">
+                        <i data-lucide="download"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Lucide icons
+            lucide.createIcons();
+            
+            // Test button visibility
+            const exportButtons = document.querySelectorAll('[data-action="export"]');
+            console.log("Found export buttons:", exportButtons.length);
+            
+            exportButtons.forEach((btn, index) => {
+                console.log(`Export button ${index}:`, {
+                    visible: btn.offsetParent !== null,
+                    display: getComputedStyle(btn).display,
+                    opacity: getComputedStyle(btn).opacity,
+                    visibility: getComputedStyle(btn).visibility,
+                    backgroundColor: getComputedStyle(btn).backgroundColor,
+                    color: getComputedStyle(btn).color
+                });
+            });
+        });
+    </script>
+</body>
+</html>

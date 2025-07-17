@@ -202,6 +202,8 @@ class UIManager {
 
     card.querySelector('[data-action="export"]').addEventListener("click", (e) => {
       e.stopPropagation()
+      console.log("Export button clicked for recipe:", recipe.name)
+      console.log("onExport function:", onExport)
       onExport(recipe) // Call the export handler
     })
 
