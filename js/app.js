@@ -5,7 +5,7 @@ class CocinaParaUnoApp {
     this.storageManager = new window.StorageManager()
     this.translationManager = new window.TranslationManager()
     this.uiManager = new window.UIManager()
-    this.exportManager = new window.ExportManager(this.translationManager)
+    this.exportManager = new window.ExportManager(this.translationManager) // Pass translation manager
     this.recipeManager = new window.RecipeManager(this.storageManager, this.uiManager, this.translationManager)
 
     this.init()
@@ -47,37 +47,24 @@ class CocinaParaUnoApp {
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
-      // Ctrl/Cmd + K for search
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault()
-        document.getElementById("search-input").focus()
-      }
-      
       // Ctrl/Cmd + N for new recipe
       if ((e.ctrlKey || e.metaKey) && e.key === "n") {
         e.preventDefault()
         this.recipeManager.openRecipeForm()
       }
-      
-      // Ctrl/Cmd + D for toggle theme
-      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+      // Ctrl/Cmd + F for search focus
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault()
-        this.toggleTheme()
-      }
-      
-      // Escape to close modals
-      if (e.key === "Escape") {
-        this.uiManager.closeAllModals()
+        document.getElementById("search-input").focus()
       }
     })
 
     // Online/offline status
     window.addEventListener("online", () => {
-      window.Utils.showToast(this.translationManager.get("backOnline"), "success")
+      window.Utils.showToast(this.translationManager.get("connectionRestored"), "success")
     })
-
     window.addEventListener("offline", () => {
-      window.Utils.showToast(this.translationManager.get("nowOffline"), "warning")
+      window.Utils.showToast(this.translationManager.get("noInternetConnection"), "warning")
     })
   }
 
@@ -86,8 +73,12 @@ class CocinaParaUnoApp {
     if (window.lucide) {
       window.lucide.createIcons()
     } else {
-      // Fallback if Lucide is not loaded
-      console.warn("Lucide icons library not loaded")
+      // Fallback if script loads later
+      setTimeout(() => {
+        if (window.lucide) {
+          window.lucide.createIcons()
+        }
+      }, 500)
     }
   }
 
@@ -105,7 +96,7 @@ class CocinaParaUnoApp {
     if (themeIcon) {
       themeIcon.setAttribute("data-lucide", theme === "dark" ? "sun" : "moon")
       if (window.lucide) {
-        window.lucide.createIcons()
+        window.lucide.createIcons() // Re-render icon
       }
     }
   }
@@ -113,58 +104,43 @@ class CocinaParaUnoApp {
   // Public methods for debugging/console access
   exportData() {
     try {
-      const data = this.storageManager.exportData()
-      const blob = new Blob([data], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `cocina-para-uno-backup-${new Date().toISOString().split('T')[0]}.json`
-      a.click()
-      URL.revokeObjectURL(url)
-      window.Utils.showToast(this.translationManager.get("exportSuccess"), "success")
+      this.storageManager.exportData()
+      window.Utils.showToast(this.translationManager.get("dataExportedSuccess"), "success")
     } catch (error) {
       console.error("Export error:", error)
-      window.Utils.showToast(this.translationManager.get("exportError"), "error")
+      window.Utils.showToast(this.translationManager.get("dataExportError"), "error")
     }
   }
 
   async importData(file) {
     try {
-      const success = await this.storageManager.importData(file)
-      if (success) {
-        this.recipeManager.loadRecipes()
-        window.Utils.showToast(this.translationManager.get("importSuccess"), "success")
-      }
+      await this.storageManager.importData(file)
+      window.Utils.showToast(this.translationManager.get("dataImportedSuccess"), "success")
+      // Reload app to reflect imported data
+      setTimeout(() => window.location.reload(), 1000)
     } catch (error) {
       console.error("Import error:", error)
-      window.Utils.showToast(this.translationManager.get("importError"), "error")
+      window.Utils.showToast(`${this.translationManager.get("dataImportError")}: ${error.message}`, "error")
     }
   }
 
   clearAllData() {
-    if (confirm(this.translationManager.get("confirmClearData"))) {
-      this.storageManager.clearAllData()
-      this.recipeManager.loadRecipes()
-      window.Utils.showToast(this.translationManager.get("dataCleared"), "success")
-    }
+    this.storageManager.clearAllData()
   }
 
   getAppStats() {
-    return {
-      recipes: this.recipeManager.recipes.length,
-      storage: this.storageManager.getStorageInfo(),
-      theme: document.body.classList.contains("dark-mode") ? "dark" : "light",
-      language: this.translationManager.currentLanguage
-    }
+    return window.RatingCalculator.getGlobalStats(this.recipeManager.recipes)
   }
 
   debug() {
     console.log("=== Cocina para Uno Debug Info ===")
-    console.log("App Stats:", this.getAppStats())
     console.log("Recipes:", this.recipeManager.recipes)
-    console.log("Storage Info:", this.storageManager.getStorageInfo())
-    console.log("Current Filter:", this.recipeManager.currentFilter)
     console.log("Filtered Recipes:", this.recipeManager.filteredRecipes)
+    console.log("Current Filter:", this.recipeManager.currentFilter)
+    console.log("Settings:", this.storageManager.loadSettings())
+    console.log("Storage Info:", this.storageManager.getStorageInfo())
+    console.log("App Stats:", this.getAppStats())
+    console.log("================================")
   }
 }
 
@@ -180,12 +156,12 @@ document.addEventListener("DOMContentLoaded", () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/sw.js")
+      .register("sw.js")
       .then((registration) => {
-        console.log("SW registered: ", registration)
+        console.log("Service Worker registered:", registration)
       })
       .catch((registrationError) => {
-        console.log("SW registration failed: ", registrationError)
+        console.log("Service Worker registration failed:", registrationError)
       })
   })
 }

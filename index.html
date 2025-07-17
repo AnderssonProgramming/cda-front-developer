@@ -3,341 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍲 Cocina para Uno - Tu Recetario Personal</title>
+    <title>Cocina para Uno</title>
+    <meta name="description" content="Tu aplicación personal de recetas de cocina">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#ef4444">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Cocina para Uno">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#ef4444">
-    <meta name="msapplication-tap-highlight" content="no">
-    
-    <!-- Description -->
-    <meta name="description" content="Tu recetario personal dinámico para cocineros solitarios">
     
     <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="./assets/img/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./assets/img/favicon-16x16.png">
-    <link rel="apple-touch-icon" href="./assets/img/apple-touch-icon.png">
+    <link rel="icon" href="public/favicon.ico">
+    <link rel="apple-touch-icon" href="public/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="./manifest.json">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body>
-    <div class="app" id="app">
-        <!-- Header -->
-        <header class="header">
-            <div class="container">
-                <div class="header__content">
-                    <div class="header__branding">
-                        <h1 class="header__title">
-                            <span class="header__emoji">🍲</span>
-                            <span class="header__text">Cocina para Uno</span>
-                        </h1>
-                        <p class="header__subtitle">Tu recetario personal dinámico</p>
+<body class="light-mode">
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-top">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i data-lucide="chef-hat"></i>
                     </div>
-                    
-                    <div class="header__stats">
-                        <div class="stats">
-                            <div class="stats__item">
-                                <span class="stats__value" id="total-recipes">0</span>
-                                <span class="stats__label">recetas</span>
-                            </div>
-                            <div class="stats__divider">•</div>
-                            <div class="stats__item">
-                                <span class="stats__value" id="total-favorites">0</span>
-                                <span class="stats__label">favoritas</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="header__actions">
-                        <!-- Language Selector -->
-                        <div class="language-selector">
-                            <button type="button" class="btn btn--ghost btn--small" id="language-btn">
-                                <span class="btn__icon">🌍</span>
-                                <span class="btn__text" id="current-language">ES</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Theme Toggle -->
-                        <div class="theme-toggle">
-                            <button type="button" class="btn btn--ghost btn--small" id="theme-toggle">
-                                <span class="btn__icon" id="theme-icon">☀️</span>
-                            </button>
-                        </div>
+                    <div>
+                        <h1 class="app-title" data-translate="appTitle">Cocina para Uno</h1>
+                        <p class="app-subtitle" data-translate="appSubtitle">Tu cocina personal</p>
                     </div>
                 </div>
                 
-                <!-- Search Bar -->
-                <div class="header__search">
-                    <div class="search">
-                        <div class="search__input-wrapper">
-                            <input 
-                                type="text" 
-                                id="search-input"
-                                class="search__input" 
-                                placeholder="Buscar recetas o ingredientes..."
-                                autocomplete="off"
-                            >
-                            <button type="button" class="search__clear" id="search-clear" hidden>
-                                <span aria-hidden="true">×</span>
-                            </button>
-                        </div>
-                    </div>
+                <div class="header-controls">
+                    <button id="theme-btn" class="btn-icon" title="Cambiar tema">
+                        <i id="theme-icon" data-lucide="moon"></i>
+                    </button>
+                    <button id="language-btn" class="btn-icon" title="Cambiar idioma">
+                        <i data-lucide="globe"></i>
+                    </button>
                 </div>
             </div>
-        </header>
+            
+            <div class="search-section">
+                <div class="search-container">
+                    <i class="search-icon" data-lucide="search"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        data-translate-placeholder="searchPlaceholder"
+                        placeholder="Buscar recetas..."
+                    >
+                </div>
+                
+                <div class="action-buttons">
+                    <select id="category-filter" class="category-select">
+                        <option value="all" data-translate="allCategories">Todas las categorías</option>
+                        <option value="Desayuno" data-translate="breakfast">Desayuno</option>
+                        <option value="Almuerzo" data-translate="lunch">Almuerzo</option>
+                        <option value="Cena" data-translate="dinner">Cena</option>
+                        <option value="Postre" data-translate="dessert">Postre</option>
+                        <option value="Snack" data-translate="snack">Snack</option>
+                        <option value="Vegetariano" data-translate="vegetarian">Vegetariano</option>
+                        <option value="Vegano" data-translate="vegan">Vegano</option>
+                        <option value="Sin Gluten" data-translate="glutenFree">Sin Gluten</option>
+                    </select>
+                    
+                    <button id="new-recipe-btn" class="btn-primary">
+                        <i data-lucide="plus"></i>
+                        <span data-translate="addRecipe">Nueva Receta</span>
+                    </button>
+                    
+                    <button id="favorites-btn" class="btn-outline">
+                        <i data-lucide="heart"></i>
+                        <span data-translate="favorites">Favoritos</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-        <!-- Navigation & Filters -->
-        <nav class="nav">
-            <div class="container">
-                <div class="nav__content">
-                    <!-- Filter Buttons -->
-                    <div class="nav__filters">
-                        <button type="button" class="filter-btn filter-btn--active" data-filter="all" id="filter-all">
-                            <span class="filter-btn__text">Todas</span>
-                            <span class="filter-btn__count" id="count-all">0</span>
-                        </button>
-                        <button type="button" class="filter-btn" data-filter="favorites" id="filter-favorites">
-                            <span class="filter-btn__text">Favoritas</span>
-                            <span class="filter-btn__count" id="count-favorites">0</span>
-                        </button>
-                        
-                        <!-- Categories Dropdown -->
-                        <div class="dropdown">
-                            <button type="button" class="filter-btn dropdown__trigger" aria-expanded="false" aria-haspopup="true">
-                                <span class="filter-btn__text">Categorías</span>
-                                <span class="dropdown__arrow">▼</span>
-                            </button>
-                            <div class="dropdown__menu" id="categories-menu" hidden></div>
-                        </div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">
+                    <i data-lucide="chef-hat"></i>
+                </div>
+                <h2 data-translate="noRecipes">No hay recetas aún</h2>
+                <p data-translate="noRecipesDesc">¡Comienza agregando tu primera receta deliciosa!</p>
+                <button id="create-first-btn" class="btn-primary mt-4">
+                    <i data-lucide="plus"></i>
+                    <span data-translate="createFirst">Crear mi primera receta</span>
+                </button>
+            </div>
+
+            <!-- Recipes Grid -->
+            <div id="recipes-grid" class="recipes-grid"></div>
+        </div>
+    </main>
+
+    <!-- Recipe Form Modal -->
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title" data-translate="addRecipe">Agregar Receta</h2>
+                <button id="modal-close" class="modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <form id="recipe-form" class="recipe-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recipe-name" class="form-label" data-translate="recipeName">Nombre de la receta</label>
+                        <input type="text" id="recipe-name" class="form-input" required data-translate-placeholder="recipeNamePlaceholder">
                     </div>
-
-                    <!-- Action Buttons -->
-                    <div class="nav__actions">
-                        <button type="button" class="btn btn--primary" id="add-recipe-btn">
-                            <span class="btn__icon">+</span>
-                            <span class="btn__text">Nueva Receta</span>
-                        </button>
+                    <div class="form-group">
+                        <label for="recipe-category" class="form-label" data-translate="category">Categoría</label>
+                        <select id="recipe-category" class="form-select" required>
+                            <option value="" data-translate="selectCategory">Seleccionar categoría</option>
+                            <option value="desayuno" data-translate="breakfast">Desayuno</option>
+                            <option value="almuerzo" data-translate="lunch">Almuerzo</option>
+                            <option value="cena" data-translate="dinner">Cena</option>
+                            <option value="postre" data-translate="dessert">Postre</option>
+                            <option value="snack" data-translate="snack">Snack</option>
+                            <option value="bebida" data-translate="drink">Bebida</option>
+                        </select>
                     </div>
                 </div>
                 
-                <!-- Results Info -->
-                <div class="nav__results">
-                    <span class="results-count" id="results-count">0 recetas</span>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <main class="main">
-            <div class="container">
-                <!-- Recipe Grid -->
-                <div class="recipes-grid" id="recipes-grid" role="grid">
-                    <!-- Recipe cards will be inserted here -->
-                </div>
-
-                <!-- Empty State -->
-                <div class="empty-state" id="empty-state" hidden>
-                    <div class="empty-state__content">
-                        <div class="empty-state__icon">🍽️</div>
-                        <h2 class="empty-state__title">No hay recetas</h2>
-                        <p class="empty-state__message">¡Agrega tu primera receta para empezar!</p>
-                        <button type="button" class="btn btn--primary empty-state__btn" onclick="app.showRecipeForm()">
-                            <span class="btn__icon">+</span>
-                            <span class="btn__text">Crear Primera Receta</span>
-                        </button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recipe-time" class="form-label" data-translate="cookingTime">Tiempo de cocción (min)</label>
+                        <input type="number" id="recipe-time" class="form-input" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipe-difficulty" class="form-label" data-translate="difficulty">Dificultad</label>
+                        <select id="recipe-difficulty" class="form-select" required>
+                            <option value="" data-translate="selectDifficulty">Seleccionar dificultad</option>
+                            <option value="easy" data-translate="easy">Fácil</option>
+                            <option value="medium" data-translate="medium">Intermedio</option>
+                            <option value="hard" data-translate="hard">Difícil</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-        </main>
-
-        <!-- Recipe Form Modal -->
-        <dialog class="modal" id="recipe-modal">
-            <div class="modal__backdrop"></div>
-            <div class="modal__container">
-                <form class="modal__form" id="recipe-form">
-                    <header class="modal__header">
-                        <h2 class="modal__title" id="form-title">Nueva Receta</h2>
-                        <button type="button" class="modal__close" aria-label="Cerrar">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </header>
-                    
-                    <div class="modal__body">
-                        <!-- Recipe Name -->
-                        <div class="form-group">
-                            <label for="recipe-name" class="form-label">Nombre de la receta</label>
-                            <input 
-                                type="text" 
-                                id="recipe-name" 
-                                class="form-input" 
-                                placeholder="Ej: Arepas con queso"
-                                required
-                            >
-                        </div>
-
-                        <!-- Basic Info Row -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="recipe-time" class="form-label">Tiempo (min)</label>
-                                <input 
-                                    type="number" 
-                                    id="recipe-time" 
-                                    class="form-input" 
-                                    placeholder="30"
-                                    min="1"
-                                    max="480"
-                                    required
-                                >
-                            </div>
-                            <div class="form-group">
-                                <label for="recipe-servings" class="form-label">Porciones</label>
-                                <input 
-                                    type="number" 
-                                    id="recipe-servings" 
-                                    class="form-input" 
-                                    placeholder="1"
-                                    min="1"
-                                    max="20"
-                                    value="1"
-                                >
-                            </div>
-                            <div class="form-group">
-                                <label for="recipe-difficulty" class="form-label">Dificultad</label>
-                                <select id="recipe-difficulty" class="form-select">
-                                    <option value="Fácil">Fácil</option>
-                                    <option value="Medio">Medio</option>
-                                    <option value="Difícil">Difícil</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Rating -->
-                        <div class="form-group">
-                            <label class="form-label">Tu calificación</label>
-                            <div class="rating-input" id="rating-input">
-                                <button type="button" class="star" data-rating="1">★</button>
-                                <button type="button" class="star" data-rating="2">★</button>
-                                <button type="button" class="star" data-rating="3">★</button>
-                                <button type="button" class="star" data-rating="4">★</button>
-                                <button type="button" class="star active" data-rating="5">★</button>
-                            </div>
-                            <input type="hidden" id="manual-rating" value="5">
-                        </div>
-
-                        <!-- Ingredients -->
-                        <div class="form-group">
-                            <label class="form-label">Ingredientes</label>
-                            <div class="dynamic-list" id="ingredients-list">
-                                <!-- Dynamic ingredient inputs will be added here -->
-                            </div>
-                            <button type="button" class="btn btn--outline btn--add-ingredient">
-                                <span class="btn__icon">+</span>
-                                <span class="btn__text">Agregar Ingrediente</span>
-                            </button>
-                        </div>
-
-                        <!-- Steps -->
-                        <div class="form-group">
-                            <label class="form-label">Pasos de preparación</label>
-                            <div class="dynamic-list" id="steps-list">
-                                <!-- Dynamic step inputs will be added here -->
-                            </div>
-                            <button type="button" class="btn btn--outline btn--add-step">
-                                <span class="btn__icon">+</span>
-                                <span class="btn__text">Agregar Paso</span>
-                            </button>
-                        </div>
-
-                        <!-- Categories -->
-                        <div class="form-group">
-                            <label for="category-input" class="form-label">Categorías</label>
-                            <input 
-                                type="text" 
-                                id="category-input" 
-                                class="form-input" 
-                                placeholder="Presiona Enter para agregar categoría"
-                            >
-                            <div class="categories-list" id="categories-list">
-                                <!-- Categories will be added here -->
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="form-group">
-                            <label for="recipe-notes" class="form-label">Notas personales (opcional)</label>
-                            <textarea 
-                                id="recipe-notes" 
-                                class="form-textarea" 
-                                placeholder="Añade cualquier nota, consejo o modificación..."
-                                rows="3"
-                            ></textarea>
-                        </div>
-
-                        <!-- Image Upload -->
-                        <div class="form-group">
-                            <label for="recipe-image" class="form-label">Imagen (opcional)</label>
-                            <input 
-                                type="file" 
-                                id="recipe-image" 
-                                class="form-input-file" 
-                                accept="image/*"
-                            >
-                            <div class="image-preview" id="image-preview" hidden>
-                                <img class="image-preview__img" alt="Preview" loading="lazy">
-                                <button type="button" class="image-preview__remove">×</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <footer class="modal__footer">
-                        <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn--primary">
-                            <span class="btn__icon">💾</span>
-                            <span class="btn__text">Guardar Receta</span>
-                        </button>
-                    </footer>
-                </form>
-            </div>
-        </dialog>
-
-        <!-- Recipe Detail Modal -->
-        <dialog class="modal modal--recipe-detail" id="recipe-detail-modal">
-            <div class="modal__backdrop"></div>
-            <div class="modal__container">
-                <div class="modal__content">
-                    <!-- Recipe detail content will be inserted here -->
+                
+                <div class="form-group">
+                    <label for="recipe-image" class="form-label" data-translate="recipeImage">Imagen de la receta</label>
+                    <input type="url" id="recipe-image" class="form-input" data-translate-placeholder="recipeImagePlaceholder">
                 </div>
-            </div>
-        </dialog>
-
-        <!-- Toast Container -->
-        <div class="toast-container" id="toast-container"></div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-translate="manualRating">Calificación manual</label>
+                    <div id="manual-rating" class="star-rating"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-translate="ingredients">Ingredientes</label>
+                    <div id="ingredients-container"></div>
+                    <button type="button" id="add-ingredient-btn" class="btn-outline" data-translate="addIngredient">
+                        <i data-lucide="plus"></i>
+                        <span>Agregar ingrediente</span>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-translate="steps">Pasos de preparación</label>
+                    <div id="steps-container"></div>
+                    <button type="button" id="add-step-btn" class="btn-outline" data-translate="addStep">
+                        <i data-lucide="plus"></i>
+                        <span>Agregar paso</span>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="recipe-notes" class="form-label" data-translate="notes">Notas adicionales</label>
+                    <textarea id="recipe-notes" class="form-textarea" rows="3" data-translate-placeholder="notesPlaceholder"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-btn" class="btn-outline" data-translate="cancel">Cancelar</button>
+                    <button type="submit" id="save-btn" class="btn-primary" data-translate="save">Guardar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
+    <!-- Recipe View Modal -->
+    <div id="view-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="view-modal-title">Ver Receta</h2>
+                <button id="view-modal-close" class="modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div id="recipe-details" class="recipe-details"></div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-translate="exportRecipe">Exportar Receta</h2>
+                <button id="export-modal-close" class="modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="export-options">
+                <div class="export-formats">
+                    <h3 data-translate="exportFormat">Formato de exportación</h3>
+                    <div class="export-format-buttons">
+                        <button class="export-format-btn" data-format="pdf" data-translate="exportPDF">
+                            <i data-lucide="file-text"></i>
+                            <span>PDF</span>
+                        </button>
+                        <button class="export-format-btn" data-format="json" data-translate="exportJSON">
+                            <i data-lucide="code"></i>
+                            <span>JSON</span>
+                        </button>
+                        <button class="export-format-btn" data-format="txt" data-translate="exportTXT">
+                            <i data-lucide="file"></i>
+                            <span>TXT</span>
+                        </button>
+                        <button class="export-format-btn" data-format="markdown" data-translate="exportMarkdown">
+                            <i data-lucide="hash"></i>
+                            <span>Markdown</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="export-settings">
+                    <h3 data-translate="exportSettings">Configuración de exportación</h3>
+                    <div class="export-checkboxes">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="include-image" checked>
+                            <span data-translate="includeImage">Incluir imagen</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="include-stats" checked>
+                            <span data-translate="includeStats">Incluir estadísticas</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="include-notes" checked>
+                            <span data-translate="includeNotes">Incluir notas</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="include-history" checked>
+                            <span data-translate="includeHistory">Incluir historial</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-recipes">0</span>
+                        <span class="stat-label" data-translate="totalRecipes">Total de recetas</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-cookings">0</span>
+                        <span class="stat-label" data-translate="totalCookings">Veces cocinadas</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="average-rating">0</span>
+                        <span class="stat-label" data-translate="averageRating">Calificación promedio</span>
+                    </div>
+                </div>
+                
+                <div class="footer-actions">
+                    <button id="export-all-btn" class="btn-ghost" data-translate="exportAll">
+                        <i data-lucide="download"></i>
+                        <span>Exportar todo</span>
+                    </button>
+                    <button id="import-btn" class="btn-ghost" data-translate="importData">
+                        <i data-lucide="upload"></i>
+                        <span>Importar datos</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Cocina para Uno. <span data-translate="footerText">Hecho con ❤️ para cocinar mejor.</span></p>
+            </div>
+        </div>
+    </footer>
+
     <!-- Scripts -->
-    <script type="module" src="./js/objects.js"></script>
-    <script type="module" src="./js/patterns.js"></script>
-    <script type="module" src="./js/main.js"></script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('SW registered'))
-                    .catch(error => console.log('SW registration failed'));
-            });
-        }
-    </script>
+    <script src="js/translations.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/rating.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/recipes.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
