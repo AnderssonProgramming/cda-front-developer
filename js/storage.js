@@ -14,12 +14,17 @@ class StorageManager {
       notifications: true,
       autoSave: true,
     }
+
+    this.storageKey = "cocinaParaUnoRecipes"
+    this.darkModeKey = "cocinaParaUnoDarkMode"
+    this.languageKey = "cocinaParaUnoLanguage"
   }
 
   // Recipe operations
   loadRecipes() {
     try {
       const recipes = localStorage.getItem(this.storageKeys.recipes)
+      const savedRecipes = localStorage.getItem(this.storageKey)
       if (recipes) {
         const parsedRecipes = JSON.parse(recipes)
         // Convert date strings back to Date objects
@@ -29,10 +34,19 @@ class StorageManager {
           lastCooked: recipe.lastCooked ? new Date(recipe.lastCooked) : null,
           cookingHistory: recipe.cookingHistory ? recipe.cookingHistory.map((date) => new Date(date)) : [],
         }))
+      } else if (savedRecipes) {
+        const parsed = JSON.parse(savedRecipes)
+        // Migrate dates back to Date objects
+        return parsed.map((r) => ({
+          ...r,
+          createdAt: new Date(r.createdAt),
+          lastCooked: r.lastCooked ? new Date(r.lastCooked) : undefined,
+          cookingHistory: r.cookingHistory ? r.cookingHistory.map((d) => new Date(d)) : [],
+        }))
       }
-      return []
     } catch (error) {
       console.error("Error loading recipes:", error)
+      localStorage.removeItem(this.storageKey) // Clear corrupted data
       return []
     }
   }
@@ -40,6 +54,7 @@ class StorageManager {
   saveRecipes(recipes) {
     try {
       localStorage.setItem(this.storageKeys.recipes, JSON.stringify(recipes))
+      localStorage.setItem(this.storageKey, JSON.stringify(recipes))
       return true
     } catch (error) {
       console.error("Error saving recipes:", error)
@@ -80,6 +95,32 @@ class StorageManager {
     const settings = this.loadSettings()
     settings.language = language
     return this.saveSettings(settings)
+  }
+
+  loadDarkMode() {
+    try {
+      const savedDarkMode = localStorage.getItem(this.darkModeKey)
+      return savedDarkMode ? JSON.parse(savedDarkMode) : false
+    } catch (e) {
+      console.error("Error loading dark mode from localStorage:", e)
+    }
+    return false
+  }
+
+  saveDarkMode(isDarkMode) {
+    try {
+      localStorage.setItem(this.darkModeKey, JSON.stringify(isDarkMode))
+    } catch (e) {
+      console.error("Error saving dark mode to localStorage:", e)
+    }
+  }
+
+  loadLanguage() {
+    return localStorage.getItem(this.languageKey) || "es"
+  }
+
+  saveLanguage(lang) {
+    localStorage.setItem(this.languageKey, lang)
   }
 
   // Storage info

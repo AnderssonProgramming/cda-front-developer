@@ -1,180 +1,106 @@
+// Import necessary classes
+import StorageManager from "./StorageManager.js"
+import TranslationManager from "./TranslationManager.js"
+import UIManager from "./UIManager.js"
+import RecipeManager from "./RecipeManager.js"
+import ExportManager from "./ExportManager.js"
+
 // Main Application Class
 class CocinaParaUnoApp {
   constructor() {
-    // Initialize managers
-    this.storageManager = new window.StorageManager()
-    this.translationManager = new window.TranslationManager()
-    this.uiManager = new window.UIManager()
-    this.exportManager = new window.ExportManager(this.translationManager) // Pass translation manager
-    this.recipeManager = new window.RecipeManager(this.storageManager, this.uiManager, this.translationManager)
+    this.storageManager = new StorageManager()
+    this.translationManager = new TranslationManager()
+    this.uiManager = new UIManager()
+    this.recipeManager = new RecipeManager(this.storageManager, this.uiManager, this.translationManager)
+    this.exportManager = new ExportManager(this.translationManager) // Initialize ExportManager
 
-    this.init()
+    this.searchTerm = ""
+    this.selectedCategory = "all"
+    this.showFavorites = false
+    this.darkMode = this.storageManager.loadDarkMode()
   }
 
   init() {
-    // Load saved settings (theme, language)
-    this.loadSettings()
-
-    // Setup global event listeners (theme, language, shortcuts)
-    this.setupGlobalEventListeners()
-
-    // Initial UI update based on loaded data
-    this.translationManager.updateUI()
-
-    // Initialize Lucide icons after DOM is ready
-    this.initializeLucideIcons()
-
-    console.log("Cocina para Uno initialized successfully! 🍳")
+    this.applyTheme()
+    this.translationManager.setLanguage(this.storageManager.loadLanguage())
+    this.recipeManager.init()
+    this.setupEventListeners()
+    this.renderApp()
   }
 
-  loadSettings() {
-    const settings = this.storageManager.loadSettings()
-    this.setTheme(settings.theme)
-    this.translationManager.setLanguage(settings.language)
+  setupEventListeners() {
+    // Header controls
+    document.getElementById("theme-btn").addEventListener("click", () => this.toggleTheme())
+    document.getElementById("language-btn").addEventListener("click", () => this.translationManager.cycleLanguage())
+
+    // Search and filters
+    document.getElementById("search-input").addEventListener("input", (e) => {
+      this.searchTerm = e.target.value
+      this.renderApp()
+    })
+    document.getElementById("category-filter").addEventListener("change", (e) => {
+      this.selectedCategory = e.target.value
+      this.renderApp()
+    })
+    document.getElementById("favorites-btn").addEventListener("click", (e) => {
+      this.showFavorites = !this.showFavorites
+      e.currentTarget.classList.toggle("active", this.showFavorites)
+      this.renderApp()
+    })
+
+    // Recipe form buttons
+    document.getElementById("new-recipe-btn").addEventListener("click", () => this.recipeManager.openRecipeForm())
+    document.getElementById("create-first-btn").addEventListener("click", () => this.recipeManager.openRecipeForm())
+    document.getElementById("cancel-btn").addEventListener("click", () => this.uiManager.closeModal("recipe"))
+    document.getElementById("recipe-form").addEventListener("submit", (e) => this.recipeManager.handleFormSubmit(e))
+
+    // Ingredient and Step buttons in form
+    document
+      .getElementById("add-ingredient-btn")
+      .addEventListener("click", () => this.recipeManager.addFormIngredient())
+    document.getElementById("add-step-btn").addEventListener("click", () => this.recipeManager.addFormStep())
+
+    // Initial rendering of category filter options
+    this.populateCategoryFilter()
   }
 
-  setupGlobalEventListeners() {
-    // Theme toggle button
-    document.getElementById("theme-btn").addEventListener("click", () => {
-      this.toggleTheme()
+  populateCategoryFilter() {
+    const categoryFilter = document.getElementById("category-filter")
+    const t = this.translationManager.get.bind(this.translationManager)
+    categoryFilter.innerHTML = `<option value="all">${t("allCategories")}</option>`
+    this.recipeManager.categories.forEach((cat) => {
+      const option = document.createElement("option")
+      option.value = cat
+      option.textContent = t(`categoryNames.${cat}`) || cat
+      categoryFilter.appendChild(option)
     })
-
-    // Language cycle button
-    document.getElementById("language-btn").addEventListener("click", () => {
-      this.translationManager.cycleLanguage()
-      this.storageManager.saveLanguage(this.translationManager.currentLanguage)
-    })
-
-    // Keyboard shortcuts
-    document.addEventListener("keydown", (e) => {
-      // Ctrl/Cmd + N for new recipe
-      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
-        e.preventDefault()
-        this.recipeManager.openRecipeForm()
-      }
-      // Ctrl/Cmd + F for search focus
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        e.preventDefault()
-        document.getElementById("search-input").focus()
-      }
-    })
-
-    // Online/offline status
-    window.addEventListener("online", () => {
-      window.Utils.showToast(this.translationManager.get("connectionRestored"), "success")
-    })
-    window.addEventListener("offline", () => {
-      window.Utils.showToast(this.translationManager.get("noInternetConnection"), "warning")
-    })
+    categoryFilter.value = this.selectedCategory // Set initial selected category
   }
 
-  initializeLucideIcons() {
-    // Ensure Lucide icons are rendered after dynamic content is added
-    if (window.lucide) {
-      window.lucide.createIcons()
-    } else {
-      // Fallback if script loads later
-      setTimeout(() => {
-        if (window.lucide) {
-          window.lucide.createIcons()
-        }
-      }, 500)
-    }
+  renderApp() {
+    this.recipeManager.renderRecipes(this.searchTerm, this.selectedCategory, this.showFavorites)
+    this.uiManager.updateFooterStats(this.recipeManager.recipes)
+    this.translationManager.updateUI() // Ensure all translated elements are updated
   }
 
-  // Theme management
-  toggleTheme() {
-    const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light"
-    const newTheme = currentTheme === "dark" ? "light" : "dark"
-    this.setTheme(newTheme)
-    this.storageManager.saveTheme(newTheme)
-  }
-
-  setTheme(theme) {
-    document.body.className = theme === "dark" ? "dark-mode" : "light-mode"
+  applyTheme() {
+    document.body.classList.toggle("dark-mode", this.darkMode)
     const themeIcon = document.getElementById("theme-icon")
     if (themeIcon) {
-      themeIcon.setAttribute("data-lucide", theme === "dark" ? "sun" : "moon")
-      if (window.lucide) {
-        window.lucide.createIcons() // Re-render icon
-      }
+      themeIcon.setAttribute("data-lucide", this.darkMode ? "sun" : "moon")
+      window.lucide.createIcons() // Re-render icon
     }
   }
 
-  // Public methods for debugging/console access
-  exportData() {
-    try {
-      this.storageManager.exportData()
-      window.Utils.showToast(this.translationManager.get("dataExportedSuccess"), "success")
-    } catch (error) {
-      console.error("Export error:", error)
-      window.Utils.showToast(this.translationManager.get("dataExportError"), "error")
-    }
-  }
-
-  async importData(file) {
-    try {
-      await this.storageManager.importData(file)
-      window.Utils.showToast(this.translationManager.get("dataImportedSuccess"), "success")
-      // Reload app to reflect imported data
-      setTimeout(() => window.location.reload(), 1000)
-    } catch (error) {
-      console.error("Import error:", error)
-      window.Utils.showToast(`${this.translationManager.get("dataImportError")}: ${error.message}`, "error")
-    }
-  }
-
-  clearAllData() {
-    this.storageManager.clearAllData()
-  }
-
-  getAppStats() {
-    return window.RatingCalculator.getGlobalStats(this.recipeManager.recipes)
-  }
-
-  debug() {
-    console.log("=== Cocina para Uno Debug Info ===")
-    console.log("Recipes:", this.recipeManager.recipes)
-    console.log("Filtered Recipes:", this.recipeManager.filteredRecipes)
-    console.log("Current Filter:", this.recipeManager.currentFilter)
-    console.log("Settings:", this.storageManager.loadSettings())
-    console.log("Storage Info:", this.storageManager.getStorageInfo())
-    console.log("App Stats:", this.getAppStats())
-    console.log("================================")
+  toggleTheme() {
+    this.darkMode = !this.darkMode
+    this.storageManager.saveDarkMode(this.darkMode)
+    this.applyTheme()
   }
 }
 
-// Initialize app when DOM is fully loaded
+// Initialize the app when the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
   window.app = new CocinaParaUnoApp()
-
-  // Expose app to global scope for easier debugging in console
-  window.CocinaParaUno = window.app
-})
-
-// PWA Service Worker Registration
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("sw.js")
-      .then((registration) => {
-        console.log("Service Worker registered:", registration)
-      })
-      .catch((registrationError) => {
-        console.log("Service Worker registration failed:", registrationError)
-      })
-  })
-}
-
-// Handle app installation prompt
-let deferredPrompt
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault()
-  deferredPrompt = e
-  window.Utils.showToast(window.app.translationManager.get("installAppPrompt"), "info")
-})
-
-window.addEventListener("appinstalled", () => {
-  window.Utils.showToast(window.app.translationManager.get("appInstalledSuccess"), "success")
-  deferredPrompt = null
+  window.app.init()
 })
