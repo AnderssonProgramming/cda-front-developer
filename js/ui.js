@@ -4,13 +4,13 @@ class UIManager {
     this.modals = {
       recipe: document.getElementById("recipe-modal"),
       view: document.getElementById("view-modal"),
-      export: document.getElementById("export-modal"), // Add export modal
+      export: document.getElementById("export-modal"),
     }
-
     this.setupEventListeners()
-  }
-
-  setupEventListeners() {
+    
+    // Inicializar los iconos Lucide en la carga
+    this.initLucideIcons()
+  }  setupEventListeners() {
     // Modal close events
     document.getElementById("modal-close").addEventListener("click", () => {
       this.closeModal("recipe")
@@ -59,9 +59,19 @@ class UIManager {
   }
 
   closeAllModals() {
-    Object.keys(this.modals).forEach((modalName) => {
-      this.closeModal(modalName)
+    Object.keys(this.modals).forEach((key) => {
+      this.modals[key].classList.remove("active")
     })
+    document.body.style.overflow = ""
+  }
+  
+  // Asegurarse de que los iconos Lucide se inicialicen correctamente
+  initLucideIcons() {
+    if (window.lucide) {
+      window.lucide.createIcons()
+    } else {
+      console.warn("Lucide no está disponible, los iconos no se pueden inicializar")
+    }
   }
 
   // Star rating component
@@ -390,15 +400,14 @@ class UIManager {
       onMarkCooked(recipe.id)
     })
 
-    // Add export button event listener
+    // Add export button event listener with log
     container.querySelector("#export-recipe-btn").addEventListener("click", () => {
-      onExport(recipe)
-    })
+      console.log("Botón de exportación clickeado");
+      onExport(recipe);
+    });
 
-    // Initialize Lucide icons
-    if (window.lucide) {
-      window.lucide.createIcons()
-    }
+    // Ensure Lucide icons are initialized
+    this.initLucideIcons();
   }
 
   // Form ingredient item

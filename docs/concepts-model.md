@@ -65,6 +65,22 @@
   - Filtros por categoría
   - Modal de detalle
 
+### 5. Gestor de Exportación
+- **Descripción**: Componente responsable de exportar recetas en diferentes formatos
+- **Responsabilidades**:
+  - Generar documentos PDF
+  - Crear archivos JSON, CSV, TXT y Markdown
+  - Generar imágenes de recetas (tarjetas)
+  - Manejar opciones de exportación
+  - Facilitar la descarga de archivos
+- **Formatos admitidos**:
+  - PDF: Documento profesional con formato
+  - JSON: Datos estructurados para respaldo
+  - CSV: Compatible con hojas de cálculo
+  - TXT: Formato de texto plano
+  - Markdown: Formato para documentación web
+  - Tarjeta: Imagen PNG de la receta
+
 ## Estructura de Datos
 
 ### Objeto Receta (JavaScript)

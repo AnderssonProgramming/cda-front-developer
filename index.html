@@ -349,8 +349,14 @@
     <script src="js/recipes.js"></script>
     <script src="js/app.js"></script>
     
-    <!-- Service Worker Registration -->
+    <!-- Ensure Lucide Icons are initialized -->
     <script>
+        // Inicializar Lucide Icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+        
+        // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')

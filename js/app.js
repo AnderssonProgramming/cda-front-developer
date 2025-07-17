@@ -1,17 +1,11 @@
-// Import necessary classes
-import StorageManager from "./StorageManager.js"
-import TranslationManager from "./TranslationManager.js"
-import UIManager from "./UIManager.js"
-import RecipeManager from "./RecipeManager.js"
-import ExportManager from "./ExportManager.js"
-
 // Main Application Class
 class CocinaParaUnoApp {
   constructor() {
     this.storageManager = new StorageManager()
     this.translationManager = new TranslationManager()
     this.uiManager = new UIManager()
-    this.recipeManager = new RecipeManager(this.storageManager, this.uiManager, this.translationManager)
+    this.ratingCalculator = new RatingCalculator()
+    this.recipeManager = new RecipeManager(this.storageManager, this.uiManager, this.translationManager, this.ratingCalculator)
     this.exportManager = new ExportManager(this.translationManager) // Initialize ExportManager
 
     this.searchTerm = ""
@@ -97,6 +91,12 @@ class CocinaParaUnoApp {
     this.storageManager.saveDarkMode(this.darkMode)
     this.applyTheme()
   }
+}
+
+// Initialize the application
+window.onload = () => {
+  window.app = new CocinaParaUnoApp()
+  window.app.init()
 }
 
 // Initialize the app when the DOM is fully loaded

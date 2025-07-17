@@ -214,30 +214,43 @@ class RecipeManager {
     })
   }
 
-  renderRecipes(searchTerm = "", selectedCategory = "all", showFavorites = false) {
+  renderRecipes(searchTerm = "", category = "all", showFavoritesOnly = false) {
+    const filteredRecipes = this.filterRecipes(searchTerm, category, showFavoritesOnly)
     const recipesGrid = document.getElementById("recipes-grid")
-    recipesGrid.innerHTML = "" // Clear current recipes
+    const emptyState = document.getElementById("empty-state")
 
-    const filtered = this.filterRecipes(searchTerm, selectedCategory, showFavorites)
+    // Clear the grid
+    recipesGrid.innerHTML = ""
 
-    if (filtered.length === 0) {
-      this.uiManager.toggleEmptyState(true)
-    } else {
-      this.uiManager.toggleEmptyState(false)
-      filtered.forEach((recipe) => {
-        const card = this.uiManager.createRecipeCard(
-          recipe,
-          this.handleEdit.bind(this),
-          this.deleteRecipe.bind(this),
-          this.handleView.bind(this),
-          this.toggleFavorite.bind(this),
-          this.markAsCooked.bind(this),
-          window.app.exportManager.openExportModal.bind(window.app.exportManager), // Pass export handler
-        )
-        recipesGrid.appendChild(card)
-      })
+    if (filteredRecipes.length === 0) {
+      // Show empty state if no recipes match
+      recipesGrid.style.display = "none"
+      emptyState.style.display = "block"
+      return
     }
-    this.uiManager.updateFooterStats(this.recipes)
+
+    // Show recipes grid
+    recipesGrid.style.display = "grid"
+    emptyState.style.display = "none"
+
+    // Render each recipe card
+    filteredRecipes.forEach((recipe) => {
+      const card = this.uiManager.createRecipeCard(
+        recipe,
+        (recipe) => this.editRecipe(recipe),
+        (id) => this.deleteRecipe(id),
+        (recipe) => this.viewRecipe(recipe),
+        (id) => this.toggleFavorite(id),
+        (id) => this.markRecipeAsCooked(id),
+        (recipe) => this.exportRecipe(recipe),
+      )
+      recipesGrid.appendChild(card)
+    })
+    
+    // Inicializar los iconos Lucide después de renderizar todas las recetas
+    if (window.lucide) {
+      window.lucide.createIcons()
+    }
   }
 
   // Form handling for Add/Edit
@@ -443,6 +456,15 @@ class RecipeManager {
       `<i data-lucide="eye"></i> <span>${window.Utils.sanitizeHTML(recipe.name)}</span>`
     window.lucide.createIcons() // Re-render icons in modal
     this.uiManager.openModal("view")
+  }
+
+  // Exportar receta utilizando ExportManager
+  exportRecipe(recipe) {
+    if (window.app && window.app.exportManager) {
+      window.app.exportManager.openExportModal(recipe);
+    } else {
+      console.error("ExportManager no está disponible");
+    }
   }
 }
 
