@@ -170,8 +170,8 @@ class UIManager {
                         <button class="btn-icon blue" data-action="view" title="${t("view")}">
                             <i data-lucide="eye"></i>
                         </button>
-                        <button class="btn-icon purple" data-action="export" title="${t("exportRecipe")}">
-                            <i data-lucide="download"></i>
+                        <button class="btn-icon purple" data-action="export" title="${t("exportRecipe")}" style="background-color: #8B5CF6 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">
+                            <i data-lucide="download" style="width: 16px; height: 16px;"></i>
                         </button>
                         <button class="btn-icon orange" data-action="edit" title="${t("edit")}">
                             <i data-lucide="edit"></i>

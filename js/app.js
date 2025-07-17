@@ -47,6 +47,33 @@ class CocinaParaUnoApp {
     document.getElementById("create-first-btn").addEventListener("click", () => this.recipeManager.openRecipeForm())
     document.getElementById("cancel-btn").addEventListener("click", () => this.uiManager.closeModal("recipe"))
     document.getElementById("recipe-form").addEventListener("submit", (e) => this.recipeManager.handleFormSubmit(e))
+    
+    // Test export button
+    document.getElementById("test-export-btn").addEventListener("click", () => {
+      // Create a test recipe
+      const testRecipe = {
+        id: "test-1",
+        name: "Test Recipe",
+        ingredients: ["Test ingredient 1", "Test ingredient 2"],
+        steps: ["Test step 1", "Test step 2"],
+        time: 30,
+        servings: 2,
+        difficulty: "Fácil",
+        category: ["Test"],
+        favorite: false,
+        finalRating: 4,
+        manualRating: 4,
+        autoRating: 4,
+        timesCooked: 0,
+        lastCooked: null,
+        notes: "Test notes",
+        cookingHistory: [],
+        createdAt: new Date()
+      }
+      
+      console.log("Test export button clicked");
+      this.exportManager.openExportModal(testRecipe);
+    })
 
     // Ingredient and Step buttons in form
     document
