@@ -78,9 +78,20 @@
 
 ## 🎨 Diseño y Arquitectura
 
+### Mockup inicial
+
+![Mockup principal](assets/img/oneCooking-Mockup.png)
+*Vista global del mockup diseñado en Figma*
+
+![Agregar receta](assets/img/agregar-receta.png)
+*Vista para agregar receta en un pop-up con buen estilo*
+
+![Búsqueda en tiempo real](assets/img/busqueda-tiempo-real.png)
+*Vista de búsqueda en tiempo real mediante el nombre de alguna receta o ingrediente*
+
 ### PWA Design System Completamente Implementado
 
-![Mockup Principal](assets/img/oneCooking-Mockup.png)
+![App funcional](assets/img/one-cooking.png)
 *Aplicación PWA completamente funcional con tema oscuro/claro*
 
 ### Características del Diseño Implementadas
