@@ -170,8 +170,8 @@ class UIManager {
                         <button class="btn-icon blue" data-action="view" title="${t("view")}">
                             <i data-lucide="eye"></i>
                         </button>
-                        <button class="btn-icon purple export-btn" data-action="export" title="${t("exportRecipe")}" style="background-color: #8B5CF6 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 8px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 36px !important; min-height: 36px !important; visibility: visible !important; opacity: 1 !important; z-index: 10 !important; margin: 0 2px !important;">
-                            <i data-lucide="download" style="width: 16px; height: 16px; color: white !important; display: block !important;"></i>
+                        <button class="btn-icon purple" data-action="export" title="${t("exportRecipe")}" style="background: #8B5CF6 !important; color: white !important; border: 2px solid #8B5CF6 !important; border-radius: 6px !important; padding: 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 40px !important; min-height: 40px !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important; margin: 0 4px !important; position: relative !important;">
+                            <i data-lucide="download" style="width: 18px; height: 18px; color: white !important; display: block !important;"></i>
                         </button>
                         <button class="btn-icon orange" data-action="edit" title="${t("edit")}">
                             <i data-lucide="edit"></i>
@@ -212,6 +212,14 @@ class UIManager {
         console.error("Error in onExport:", error)
       }
     })
+
+    // Debug: verificar que el botón se creó correctamente
+    const exportBtn = card.querySelector('[data-action="export"]')
+    console.log("Export button created:", !!exportBtn)
+    if (exportBtn) {
+      console.log("Export button styles:", exportBtn.style.cssText)
+      console.log("Export button visible:", exportBtn.offsetWidth > 0 && exportBtn.offsetHeight > 0)
+    }
 
     card.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
       e.stopPropagation()
