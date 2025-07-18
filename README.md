@@ -5,7 +5,7 @@
 
 ## 📖 Descripción del Proyecto
 
-**Cocina para Uno** es una aplicación web progresiva (PWA) completamente funcional y avanzada diseñada para personas que cocinan por sí mismas. La aplicación permite crear, organizar y gestionar un recetario personal digital con funcionalidades modernas como búsqueda inteligente, filtros dinámicos, sistema de favoritos, capacidades offline completas y todas las características de una PWA nativa.
+**Cocina para Uno** es una aplicación web progresiva (PWA) completamente funcional y avanzada diseñada para personas que cocinan por sí mismas. La aplicación permite crear, organizar y gestionar un recetario personal digital con funcionalidades modernas como búsqueda inteligente, filtros dinámicos, sistema de favoritos, **exportación multi-formato**, capacidades offline completas y todas las características de una PWA nativa.
 
 ## 🎯 Tecnologías Aplicadas
 
@@ -16,6 +16,11 @@
 5. **JS Patterns Implementados** - Singleton, Observer, Factory, Command, Strategy
 6. **PWA Completa** - Service Worker, Cache API, Background Sync, Push Notifications
 7. **Performance Optimizada** - Lazy loading, debounce, virtual scrolling, code splitting
+8. **Next.js 15** - Framework React con SSR/SSG, App Router, y optimizaciones avanzadas
+9. **Tailwind CSS** - Utility-first CSS framework con diseño responsive
+10. **Shadcn/UI** - Componentes accesibles y personalizables con Radix UI
+11. **Lucide Icons** - Iconografía moderna y escalable
+12. **TypeScript** - Tipado estático para desarrollo robusto
 
 ## 💼 Funcionalidades Principales Implementadas
 
@@ -26,6 +31,7 @@
 - ✅ **Filtros Dinámicos** - Por categorías con contadores en tiempo real
 - ✅ **Interfaz Completamente Responsiva** - Mobile-first, optimizada para todos dispositivos
 - ✅ **Persistencia Automática** - localStorage con validación y recovery
+- ✅ **Exportación Multi-Formato** - PDF, JSON, CSV, TXT, Markdown, PNG (tarjetas visuales)
 
 ### ✅ PWA Features (100% Implementadas)
 - ✅ **Instalación Nativa** - Botón automático con prompts inteligentes
@@ -41,6 +47,15 @@
 - ✅ **Animaciones Fluidas** - Transiciones CSS3 y micro-interacciones
 - ✅ **Accesibilidad WCAG 2.1** - Navegación por teclado, screen readers, ARIA completo
 - ✅ **Modales Avanzados** - Para visualización y edición de recetas
+- ✅ **Componentes Shadcn/UI** - Interfaz moderna con componentes accesibles
+
+### 🆕 Funcionalidades de Exportación (100% Implementadas)
+- ✅ **Exportación PDF** - Documentos profesionales con imágenes y metadatos
+- ✅ **Exportación JSON** - Datos estructurados para backup e intercambio
+- ✅ **Exportación CSV** - Compatible con Excel y hojas de cálculo
+- ✅ **Exportación TXT** - Formato texto plano legible
+- ✅ **Exportación Markdown** - Compatible con GitHub, blogs y documentación
+- ✅ **Tarjetas Visuales PNG** - Imágenes de recetas para redes sociales
 
 ## 🎨 Diseño y Arquitectura
 
@@ -65,21 +80,72 @@
 ├── 📄 index.html              # HTML5 semántico con PWA manifest
 ├── 📄 manifest.json           # PWA manifest con shortcuts y file handlers
 ├── 📄 sw.js                  # Service Worker con cache strategies
-├── 📄 offline.html           # Página offline elegante
-├── 📁 css/
-│   └── 📄 styles.css          # ITCSS + BEM con custom properties
-├── 📁 js/
-│   ├── 📄 main.js            # App principal con PWA Manager
-│   ├── 📄 objects.js         # Modelos avanzados con validación
-│   └── 📄 patterns.js        # 5+ patrones implementados
-├── 📁 assets/
-│   ├── 📁 img/              # Imágenes optimizadas con lazy loading
-│   └── 📁 fonts/            # Tipografías web optimizadas
+├── 📄 package.json           # Dependencies: Next.js 15, Tailwind, TypeScript
+├── 📄 tsconfig.json          # TypeScript configuration
+├── 📄 tailwind.config.ts     # Tailwind CSS configuration
+├── 📄 next.config.mjs        # Next.js 15 configuration
+├── 📁 app/                   # Next.js App Router
+│   ├── 📄 layout.tsx         # Root layout con providers
+│   ├── 📄 page.tsx           # Página principal de la aplicación
+│   └── 📄 globals.css        # Estilos globales con Tailwind
+├── 📁 components/            # Componentes reutilizables
+│   ├── 📄 theme-provider.tsx # Provider del tema oscuro/claro
+│   └── 📁 ui/               # Componentes Shadcn/UI
+│       ├── 📄 button.tsx    # Botones accesibles
+│       ├── 📄 card.tsx      # Tarjetas de recetas
+│       ├── 📄 dialog.tsx    # Modales y diálogos
+│       ├── 📄 input.tsx     # Inputs y formularios
+│       └── 📄 toast.tsx     # Sistema de notificaciones
+├── 📁 js/                   # JavaScript modules
+│   ├── 📄 app.js            # App principal con managers
+│   ├── 📄 ui.js             # UI Manager con componentes
+│   ├── 📄 recipes.js        # Recipe Manager con CRUD
+│   ├── 📄 export.js         # Export Manager multi-formato
+│   ├── 📄 storage.js        # Storage Manager con validación
+│   ├── 📄 translations.js   # Sistema de internacionalización
+│   └── 📄 utils.js          # Utilidades y helpers
+├── 📁 lib/                  # Utilidades de TypeScript
+│   └── 📄 utils.ts          # Utilidades con type safety
+├── 📁 styles/               # Estilos CSS
+│   ├── 📄 globals.css       # Variables CSS y base styles
+│   └── 📄 styles.css        # Estilos específicos de la PWA
+├── 📁 public/               # Assets estáticos
+│   ├── 📄 favicon.ico       # Iconos y manifest
+│   ├── � icon-192x192.png  # PWA icons
+│   └── 📄 sw.js            # Service Worker
+├── �📁 assets/
+│   ├── 📁 img/              # Imágenes optimizadas
+│   └── 📁 fonts/            # Tipografías web
 └── 📁 docs/
     ├── 📄 casos-uso.md      # Casos de uso implementados
-    ├── 📄 concepts-model.png # Diagrama de arquitectura
+    ├── 📄 concepts-model.md # Diagrama de arquitectura
     └── 📄 retrospective.md  # Retrospectiva técnica completa
 ```
+
+## 🔧 Stack Tecnológico Actual
+
+### Frontend Framework
+- **Next.js 15** - Framework React con App Router, SSR/SSG
+- **React 18** - Library de componentes con Concurrent Features
+- **TypeScript** - Tipado estático para desarrollo robusto
+
+### Styling & UI
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn/UI** - Componentes accesibles con Radix UI
+- **Lucide Icons** - Iconografía moderna SVG
+- **CSS Variables** - Theming dinámico oscuro/claro
+
+### Funcionalidades Avanzadas
+- **jsPDF** - Generación de documentos PDF
+- **html2canvas** - Captura de elementos DOM como imágenes
+- **Service Worker** - Cache strategies y funcionalidad offline
+- **Web Share API** - Compartir nativo del dispositivo
+
+### Herramientas de Desarrollo
+- **ESLint** - Linting y quality checks
+- **Prettier** - Formateo automático de código
+- **PostCSS** - Procesamiento CSS avanzado
+- **pnpm** - Gestor de paquetes eficiente
 
 ## 📅 Desarrollo Completado por Semanas
 
