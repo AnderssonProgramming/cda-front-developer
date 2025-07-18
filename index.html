@@ -370,6 +370,44 @@
                     .catch(registrationError => console.log('SW registration failed: ', registrationError));
             });
         }
+        
+        // Export Button Debug
+        setTimeout(() => {
+            console.log("=== EXPORT BUTTON DEBUG ===");
+            
+            const exportButtons = document.querySelectorAll('[data-action="export"]');
+            console.log("Export buttons found:", exportButtons.length);
+            
+            exportButtons.forEach((btn, index) => {
+                console.log(`Button ${index + 1}:`, {
+                    visible: btn.offsetWidth > 0 && btn.offsetHeight > 0,
+                    display: window.getComputedStyle(btn).display,
+                    visibility: window.getComputedStyle(btn).visibility,
+                    opacity: window.getComputedStyle(btn).opacity,
+                    backgroundColor: window.getComputedStyle(btn).backgroundColor,
+                    zIndex: window.getComputedStyle(btn).zIndex,
+                    rect: btn.getBoundingClientRect()
+                });
+                
+                // Force visible
+                btn.style.setProperty('background-color', '#8B5CF6', 'important');
+                btn.style.setProperty('color', 'white', 'important');
+                btn.style.setProperty('display', 'inline-flex', 'important');
+                btn.style.setProperty('visibility', 'visible', 'important');
+                btn.style.setProperty('opacity', '1', 'important');
+                btn.style.setProperty('z-index', '9999', 'important');
+                btn.style.setProperty('min-width', '40px', 'important');
+                btn.style.setProperty('min-height', '40px', 'important');
+                btn.style.setProperty('padding', '10px', 'important');
+                btn.style.setProperty('border-radius', '6px', 'important');
+                btn.style.setProperty('box-shadow', '0 4px 8px rgba(0,0,0,0.5)', 'important');
+                btn.style.setProperty('border', '2px solid #8B5CF6', 'important');
+                
+                console.log("Button after forced styling:", btn.style.cssText);
+            });
+            
+            console.log("=== END DEBUG ===");
+        }, 3000);
     </script>
 </body>
 </html>

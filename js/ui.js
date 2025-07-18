@@ -170,7 +170,7 @@ class UIManager {
                         <button class="btn-icon blue" data-action="view" title="${t("view")}">
                             <i data-lucide="eye"></i>
                         </button>
-                        <button class="btn-icon purple" data-action="export" title="${t("exportRecipe")}" style="background: #8B5CF6 !important; color: white !important; border: 2px solid #8B5CF6 !important; border-radius: 6px !important; padding: 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 40px !important; min-height: 40px !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important; margin: 0 4px !important; position: relative !important;">
+                        <button class="btn-icon purple export-btn" data-action="export" title="${t("exportRecipe")}" style="background: #8B5CF6 !important; color: white !important; border: 2px solid #8B5CF6 !important; border-radius: 6px !important; padding: 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 40px !important; min-height: 40px !important; visibility: visible !important; opacity: 1 !important; z-index: 100 !important; margin: 0 4px !important; position: relative !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;">
                             <i data-lucide="download" style="width: 18px; height: 18px; color: white !important; display: block !important;"></i>
                         </button>
                         <button class="btn-icon orange" data-action="edit" title="${t("edit")}">

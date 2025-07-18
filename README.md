@@ -21,6 +21,11 @@
 10. **Shadcn/UI** - Componentes accesibles y personalizables con Radix UI
 11. **Lucide Icons** - Iconografía moderna y escalable
 12. **TypeScript** - Tipado estático para desarrollo robusto
+13. **jsPDF** - Generación de documentos PDF profesionales
+14. **html2canvas** - Captura de elementos DOM como imágenes PNG
+15. **Unsplash API** - Integración con API de imágenes para recetas
+16. **Web Share API** - Compartir nativo del dispositivo
+17. **LocalStorage** - Persistencia local con validación y recovery
 
 ## 💼 Funcionalidades Principales Implementadas
 
@@ -50,12 +55,26 @@
 - ✅ **Componentes Shadcn/UI** - Interfaz moderna con componentes accesibles
 
 ### 🆕 Funcionalidades de Exportación (100% Implementadas)
-- ✅ **Exportación PDF** - Documentos profesionales con imágenes y metadatos
+
+- ✅ **Exportación PDF** - Documentos profesionales con imágenes y metadatos usando jsPDF
 - ✅ **Exportación JSON** - Datos estructurados para backup e intercambio
 - ✅ **Exportación CSV** - Compatible con Excel y hojas de cálculo
 - ✅ **Exportación TXT** - Formato texto plano legible
 - ✅ **Exportación Markdown** - Compatible con GitHub, blogs y documentación
-- ✅ **Tarjetas Visuales PNG** - Imágenes de recetas para redes sociales
+- ✅ **Tarjetas Visuales PNG** - Imágenes de recetas para redes sociales usando html2canvas
+- ✅ **Modal de Exportación** - Interfaz intuitiva con opciones avanzadas
+- ✅ **Descarga Automática** - Generación y descarga automática de archivos
+- ✅ **Validación de Datos** - Verificación completa antes de exportar
+- ✅ **Nombres de Archivo Inteligentes** - Basados en nombre de receta con sanitización
+
+### 🔧 Arquitectura de Exportación Implementada
+
+- **ExportManager Class** - Gestor central de todas las funcionalidades de exportación
+- **Formato PDF**: Usando jsPDF con layout profesional, imágenes y metadatos
+- **Formato PNG**: Usando html2canvas para capturar elementos DOM como imágenes
+- **Validación Robusta**: Verificación de datos y manejo de errores
+- **UI Responsive**: Modal de exportación optimizado para móviles y desktop
+- **Performance**: Carga lazy de librerías y optimización de memoria
 
 ## 🎨 Diseño y Arquitectura
 
@@ -184,17 +203,48 @@ La documentación técnica está completamente actualizada en la carpeta `docs/`
 ## 🚀 Instalación y Uso
 
 ### Desarrollo Local
+
 ```bash
 # Clonar repositorio
 git clone https://github.com/AnderssonProgramming/cda-front-developer.git
 cd cda-front-developer
 
-# Servir con servidor HTTP (cualquier opción)
+# Instalar dependencias
+npm install
+# O con pnpm (recomendado)
+pnpm install
+
+# Modo de desarrollo Next.js
+npm run dev
+# O con pnpm
+pnpm dev
+
+# Acceder en http://localhost:3000
+```
+
+### Desarrollo con la PWA vanilla
+
+```bash
+# Servir la PWA con servidor HTTP estático
 python -m http.server 8000
 # O: npx http-server
 # O: VS Code Live Server
 
 # Acceder en http://localhost:8000
+```
+
+### Build para Producción
+
+```bash
+# Build optimizado para producción
+npm run build
+# O con pnpm
+pnpm build
+
+# Servir build de producción
+npm start
+# O con pnpm
+pnpm start
 ```
 
 ### Instalación como PWA
