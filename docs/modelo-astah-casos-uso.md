@@ -51,28 +51,6 @@
 
 ---
 
-### 📝 FUNCIONES CRUD (MANTENIMIENTO)
-
-#### CU-13: Consultar operación de creación de nueva receta
-**COMO** usuario creativo **QUIERO** poder consultar el formulario para crear una nueva receta con todos sus campos **PARA PODER** almacenar mis nuevas creaciones culinarias en el sistema de manera estructurada.
-
-#### CU-14: Consultar operación de lectura de datos almacenados
-**COMO** usuario del sistema **QUIERO** poder consultar todas las operaciones de lectura de datos almacenados localmente **PARA PODER** verificar que mi información persiste correctamente en el navegador.
-
-#### CU-15: Consultar operación de actualización de receta existente
-**COMO** usuario perfeccionista **QUIERO** poder consultar el formulario de edición de una receta existente **PARA PODER** actualizar ingredientes, pasos, tiempo o cualquier detalle que quiera mejorar.
-
-#### CU-16: Consultar operación de eliminación de receta
-**COMO** usuario organizador **QUIERO** poder consultar la confirmación de eliminación de una receta **PARA PODER** mantener mi recetario limpio eliminando preparaciones que ya no necesito.
-
-#### CU-17: Consultar operación de marcado/desmarcado de favoritas
-**COMO** usuario frecuente **QUIERO** poder consultar la operación de marcado y desmarcado de recetas como favoritas **PARA PODER** gestionar dinámicamente mis preferencias culinarias.
-
-#### CU-18: Consultar operación de persistencia en almacenamiento local
-**COMO** usuario del sistema **QUIERO** poder consultar las operaciones de guardado y recuperación en localStorage **PARA PODER** asegurarme de que mis datos se mantienen entre sesiones del navegador.
-
----
-
 ## 🎭 ACTORES DEL SISTEMA
 
 ### Actor Principal
