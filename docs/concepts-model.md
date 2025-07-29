@@ -21,6 +21,8 @@
                             [Favorita]     [Imagen]
 ```
 
+![Modelo de Conceptos](../assets/img/concepts-Model.png)
+
 ## Entidades del Sistema
 
 ### 1. Usuario

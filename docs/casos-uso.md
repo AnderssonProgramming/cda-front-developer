@@ -5,12 +5,24 @@
 
 ## 🎯 Resumen de Implementación
 
+**Diseño de consultas generales**: Consultas gerenciales, operativas y modelo de funciones dependiendo del actor que cumple dentro de la aplicación. 
 **Total de Casos de Uso**: 18 implementados (8 originales + 4 PWA avanzados + 6 exportación)  
 **Estado de Funcionalidad**: 100% operativa  
 **Nivel de Complejidad**: Avanzado con patrones de diseño y PWA completa  
 **Tecnologías**: Next.js 15, TypeScript, Tailwind CSS, Shadcn/UI, jsPDF, html2canvas, PWA, Service Worker
 
 ---
+
+## DISEÑO DE CONSULTAS
+
+- Consultas gerenciales
+![Consultas gerenciales](../assets/img/management-queries.png) 
+
+- Consultas operativas
+![Consultas operativas](../assets/img/operative-queries.png)
+
+- Modelo de funciones
+![Modelo de funciones](../assets/img/functions-model.png)
 
 ## ✅ CASOS DE USO CORE IMPLEMENTADOS
 
