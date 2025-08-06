@@ -213,6 +213,36 @@ La documentación técnica está completamente actualizada en la carpeta `docs/`
 
 ## 🚀 Instalación y Uso
 
+### ⚙️ Configuración de Variables de Entorno
+
+Este proyecto utiliza la API de Unsplash para obtener imágenes automáticamente. Para configurar tu propia API key:
+
+1. **Crear archivo de configuración**:
+
+   ```bash
+   # Copia el archivo de ejemplo
+   cp .env.example .env.local
+   ```
+
+2. **Obtener API Key de Unsplash**:
+   - Ve a [Unsplash Developers](https://unsplash.com/developers)
+   - Crea una cuenta gratuita o inicia sesión
+   - Crea una nueva aplicación
+   - Copia tu **Access Key**
+
+3. **Configurar la variable de entorno**:
+
+   ```bash
+   # Edita .env.local y reemplaza tu_access_key_aqui con tu API key real
+   NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=tu_access_key_de_unsplash_aqui
+   ```
+
+4. **Archivos de configuración**:
+   - `.env.local` - Tu configuración personal (NO subir a Git)
+   - `.env.example` - Plantilla de ejemplo (SÍ incluida en Git)
+
+> **⚠️ Importante**: Nunca subas tu archivo `.env.local` al repositorio. Ya está incluido en `.gitignore` para tu seguridad.
+
 ### Desarrollo Local
 
 ```bash

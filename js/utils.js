@@ -50,8 +50,9 @@ class Utils {
   // Get Unsplash image
   static async getUnsplashImage(query) {
     try {
+      const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'demo-access-key'
       const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=B-kNU-wr__MAHOQg45xN_NZy4tHPqSsguoMNUif8jvk`,
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${accessKey}`,
       )
       const data = await response.json()
       return data.results[0]?.urls?.small || "/placeholder.svg?height=300&width=400"
@@ -64,8 +65,9 @@ class Utils {
   // Get ingredient image
   static async getIngredientImage(ingredient) {
     try {
+      const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'demo-access-key'
       const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(ingredient + " food ingredient")}&per_page=1&client_id=B-kNU-wr__MAHOQg45xN_NZy4tHPqSsguoMNUif8jvk`,
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(ingredient + " food ingredient")}&per_page=1&client_id=${accessKey}`,
       )
       const data = await response.json()
       return data.results[0]?.urls?.thumb || "/placeholder.svg?height=50&width=50"
