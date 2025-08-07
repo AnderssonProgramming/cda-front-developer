@@ -208,7 +208,7 @@
 La documentación técnica está completamente actualizada en la carpeta `docs/`:
 
 - **[Casos de Uso](docs/casos-uso.md)** - 8+ casos de uso implementados y funcionales
-- **[Modelo de Conceptos](docs/concepts-model.png)** - Arquitectura PWA y patrones aplicados  
+- **[Modelo de Conceptos](docs/concepts-model.md)** - Arquitectura PWA y patrones aplicados  
 - **[Retrospectiva Técnica](docs/retrospective.md)** - Análisis completo de tecnologías implementadas
 
 ## 🚀 Instalación y Uso
