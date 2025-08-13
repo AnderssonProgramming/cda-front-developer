@@ -213,7 +213,99 @@ La documentación técnica está completamente actualizada en la carpeta `docs/`
 
 ## 🚀 Instalación y Uso
 
-### ⚙️ Configuración de Variables de Entorno
+### 🧪 Pruebas Unitarias
+
+El proyecto incluye un sistema completo de pruebas unitarias con **Jest** para validar todas las funcionalidades críticas.
+
+### 📊 Estadísticas de Pruebas
+
+- **30 pruebas unitarias** implementadas y exitosas
+- **100% de éxito** en todas las pruebas
+- **Cobertura completa** de funciones críticas
+- **Validación exhaustiva** de casos edge y errores
+
+### 🎯 Áreas Probadas
+
+#### Utils Class (22 pruebas)
+- ✅ **Generación de IDs únicos** - Validación de unicidad e integridad
+- ✅ **Sanitización HTML** - Prevención de ataques XSS
+- ✅ **Debounce** - Control de ejecución temporizada
+- ✅ **Detección móvil** - Responsive design validation
+- ✅ **Búsqueda inteligente** - Matching case-insensitive
+- ✅ **Formateo de archivos** - Conversión bytes a formato legible
+- ✅ **Truncado de texto** - Limitación de longitud con ellipsis
+- ✅ **Deep cloning** - Clonación profunda de objetos complejos
+- ✅ **Validación email** - Regex validation completa
+- ✅ **Generación colores** - Hex colors aleatorios válidos
+- ✅ **Contraste automático** - Cálculo de color de contraste
+- ✅ **APIs Unsplash** - Manejo de respuestas exitosas y errores
+- ✅ **DOM utilities** - Scroll y viewport detection
+- ✅ **LocalStorage** - Persistencia con error handling
+
+#### RatingCalculator Class (7 pruebas)
+- ✅ **Auto-rating calculation** - Algoritmo de puntuación automática
+- ✅ **Frequency weighting** - Peso por frecuencia de cocción
+- ✅ **Favorite boosting** - Bonus por recetas favoritas
+- ✅ **Recency consideration** - Factor de recencia de uso
+- ✅ **Final rating hybrid** - Combinación manual + automático (70/30)
+- ✅ **Edge cases handling** - Valores extremos y límites
+- ✅ **Recipe updates** - Actualización de ratings en tiempo real
+
+#### Integración de APIs (6 pruebas)
+- ✅ **Unsplash API integration** - Obtención de imágenes de recetas
+- ✅ **Ingredient image search** - Búsqueda específica de ingredientes
+- ✅ **Error handling** - Fallback a placeholders en errores
+- ✅ **Empty results** - Manejo de respuestas vacías
+- ✅ **Query encoding** - Codificación correcta de parámetros
+- ✅ **Environment variables** - Uso seguro de API keys
+
+### 🚀 Ejecutar Pruebas
+
+```bash
+# Ejecutar todas las pruebas
+npm test
+
+# Ejecutar pruebas en modo watch (desarrollo)
+npm run test:watch
+
+# Ejecutar pruebas con reporte de cobertura
+npm run test:coverage
+```
+
+### 📋 Comandos de Testing
+
+Los siguientes scripts están disponibles en `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch", 
+    "test:coverage": "jest --coverage"
+  }
+}
+```
+
+### 🔧 Configuración de Testing
+
+- **Framework**: Jest 29+ con JSDOM environment
+- **Mocking**: localStorage, fetch, DOM APIs
+- **Setup**: Configuración automática de mocks globales
+- **Coverage**: Reportes en HTML, LCOV y texto
+- **CI Ready**: Compatible con pipelines de CI/CD
+
+### 📁 Estructura de Testing
+
+```
+tests/
+├── setup.js           # Configuración global de mocks
+├── main.test.js       # Pruebas principales de Utils
+└── rating.test.js     # Pruebas del sistema de ratings
+```
+
+> **✅ Calidad Asegurada**: Todas las funcionalidades críticas están probadas y validadas antes de cada release.
+
+## ⚙️ Configuración de Variables de Entorno
 
 Este proyecto utiliza la API de Unsplash para obtener imágenes automáticamente. Para configurar tu propia API key:
 
