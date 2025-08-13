@@ -152,30 +152,6 @@
     └── 📄 retrospective.md  # Retrospectiva técnica completa
 ```
 
-## 🔧 Stack Tecnológico Actual
-
-### Frontend Framework
-- **Next.js 15** - Framework React con App Router, SSR/SSG
-- **React 18** - Library de componentes con Concurrent Features
-- **TypeScript** - Tipado estático para desarrollo robusto
-
-### Styling & UI
-- **Tailwind CSS** - Utility-first CSS framework
-- **Shadcn/UI** - Componentes accesibles con Radix UI
-- **Lucide Icons** - Iconografía moderna SVG
-- **CSS Variables** - Theming dinámico oscuro/claro
-
-### Funcionalidades Avanzadas
-- **jsPDF** - Generación de documentos PDF
-- **html2canvas** - Captura de elementos DOM como imágenes
-- **Service Worker** - Cache strategies y funcionalidad offline
-- **Web Share API** - Compartir nativo del dispositivo
-
-### Herramientas de Desarrollo
-- **ESLint** - Linting y quality checks
-- **Prettier** - Formateo automático de código
-- **PostCSS** - Procesamiento CSS avanzado
-- **pnpm** - Gestor de paquetes eficiente
 
 ## 📅 Desarrollo Completado por Semanas
 
@@ -208,7 +184,7 @@
 La documentación técnica está completamente actualizada en la carpeta `docs/`:
 
 - **[Casos de Uso](docs/casos-uso.md)** - 8+ casos de uso implementados y funcionales
-- **[Modelo de Conceptos](docs/concepts-model.png)** - Arquitectura PWA y patrones aplicados  
+- **[Modelo de Conceptos](docs/concepts-model.md)** - Arquitectura PWA y patrones aplicados  
 - **[Retrospectiva Técnica](docs/retrospective.md)** - Análisis completo de tecnologías implementadas
 
 ## 🚀 Instalación y Uso
