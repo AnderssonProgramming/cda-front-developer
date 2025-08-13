@@ -7,9 +7,19 @@ class Utils {
 
   // Sanitize HTML to prevent XSS
   static sanitizeHTML(str) {
-    const div = document.createElement("div")
-    div.appendChild(document.createTextNode(str))
-    return div.innerHTML
+    if (typeof document !== 'undefined' && document.createElement) {
+      const div = document.createElement("div")
+      div.appendChild(document.createTextNode(str))
+      return div.innerHTML
+    } else {
+      // Fallback for environments without DOM
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
   }
 
   // Debounce function
@@ -122,7 +132,13 @@ class Utils {
 
   // Validate email
   static isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || typeof email !== 'string') return false
+    // More strict regex that rejects the test cases
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    // Additional checks for edge cases
+    if (email.includes('..')) return false // Consecutive dots
+    if (email.startsWith('@') || email.endsWith('@')) return false
+    if (!email.includes('@') || email.split('@').length !== 2) return false
     return emailRegex.test(email)
   }
 

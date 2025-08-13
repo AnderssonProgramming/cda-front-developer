@@ -44,6 +44,7 @@ class StorageManager {
           cookingHistory: r.cookingHistory ? r.cookingHistory.map((d) => new Date(d)) : [],
         }))
       }
+      return [] // Return empty array when no recipes found
     } catch (error) {
       console.error("Error loading recipes:", error)
       localStorage.removeItem(this.storageKey) // Clear corrupted data
@@ -58,7 +59,9 @@ class StorageManager {
       return true
     } catch (error) {
       console.error("Error saving recipes:", error)
-      window.Utils.showToast("Error al guardar las recetas", "error")
+      if (window.Utils && window.Utils.showToast) {
+        window.Utils.showToast("Error al guardar las recetas", "error")
+      }
       return false
     }
   }
@@ -91,12 +94,6 @@ class StorageManager {
     return this.saveSettings(settings)
   }
 
-  saveLanguage(language) {
-    const settings = this.loadSettings()
-    settings.language = language
-    return this.saveSettings(settings)
-  }
-
   loadDarkMode() {
     try {
       const savedDarkMode = localStorage.getItem(this.darkModeKey)
@@ -116,11 +113,86 @@ class StorageManager {
   }
 
   loadLanguage() {
-    return localStorage.getItem(this.languageKey) || "es"
+    try {
+      const settings = this.loadSettings()
+      return settings.language || "es"
+    } catch (error) {
+      console.error("Error loading language:", error)
+      return "es"
+    }
   }
 
   saveLanguage(lang) {
-    localStorage.setItem(this.languageKey, lang)
+    try {
+      const settings = this.loadSettings()
+      settings.language = lang
+      this.saveSettings(settings)
+    } catch (error) {
+      console.error("Error saving language:", error)
+    }
+  }
+
+  loadTheme() {
+    try {
+      const settings = this.loadSettings()
+      return settings.theme || "light"
+    } catch (error) {
+      console.error("Error loading theme:", error)
+      return "light"
+    }
+  }
+
+  // Recipe validation
+  validateRecipe(recipe) {
+    try {
+      const requiredFields = ['id', 'name', 'ingredients', 'instructions']
+      const hasRequiredFields = requiredFields.every(field => recipe.hasOwnProperty(field))
+      
+      if (!hasRequiredFields) return false
+      
+      // Check data types
+      if (typeof recipe.id !== 'string') return false
+      if (typeof recipe.name !== 'string') return false
+      if (!Array.isArray(recipe.ingredients)) return false
+      if (!Array.isArray(recipe.instructions)) return false
+      
+      return true
+    } catch (error) {
+      console.error("Error validating recipe:", error)
+      return false
+    }
+  }
+
+  // Data repair
+  repairData(recipes) {
+    try {
+      return recipes.filter(recipe => {
+        if (!recipe.id) {
+          recipe.id = this.generateId()
+        }
+        if (!recipe.ingredients) {
+          recipe.ingredients = []
+        }
+        if (!recipe.instructions) {
+          recipe.instructions = []
+        }
+        if (!recipe.createdAt) {
+          recipe.createdAt = new Date()
+        }
+        if (!recipe.cookingHistory) {
+          recipe.cookingHistory = []
+        }
+        
+        return this.validateRecipe(recipe)
+      })
+    } catch (error) {
+      console.error("Error repairing data:", error)
+      return []
+    }
+  }
+
+  generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2)
   }
 
   // Storage info
@@ -138,11 +210,13 @@ class StorageManager {
       const usedPercentage = (totalSize / totalStorage) * 100
 
       return {
-        totalSize: window.Utils.formatFileSize(totalSize),
-        recipesSize: window.Utils.formatFileSize(recipesSize),
-        settingsSize: window.Utils.formatFileSize(settingsSize),
+        totalSize: window.Utils ? window.Utils.formatFileSize(totalSize) : `${totalSize} Bytes`,
+        recipesSize: window.Utils ? window.Utils.formatFileSize(recipesSize) : `${recipesSize} Bytes`,
+        settingsSize: window.Utils ? window.Utils.formatFileSize(settingsSize) : `${settingsSize} Bytes`,
         usedPercentage: Math.round(usedPercentage * 100) / 100,
-        availableSpace: window.Utils.formatFileSize(totalStorage - totalSize),
+        availableSpace: window.Utils ? window.Utils.formatFileSize(totalStorage - totalSize) : "Unknown",
+        used: totalSize,
+        keys: Object.keys(localStorage)
       }
     } catch (error) {
       console.error("Error getting storage info:", error)
@@ -152,6 +226,8 @@ class StorageManager {
         settingsSize: "0 Bytes",
         usedPercentage: 0,
         availableSpace: "Unknown",
+        used: 0,
+        keys: []
       }
     }
   }
@@ -233,17 +309,23 @@ class StorageManager {
         localStorage.removeItem(key)
       })
 
-      window.Utils.showToast("Todos los datos han sido eliminados", "success")
+      if (window.Utils && window.Utils.showToast) {
+        window.Utils.showToast("Todos los datos han sido eliminados", "success")
+      }
 
       // Reload page after clearing
       setTimeout(() => {
-        window.location.reload()
+        if (typeof window !== 'undefined' && window.location) {
+          window.location.reload()
+        }
       }, 1000)
 
       return true
     } catch (error) {
       console.error("Error clearing data:", error)
-      window.Utils.showToast("Error al eliminar los datos", "error")
+      if (window.Utils && window.Utils.showToast) {
+        window.Utils.showToast("Error al eliminar los datos", "error")
+      }
       return false
     }
   }
